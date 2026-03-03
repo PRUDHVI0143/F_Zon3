@@ -1,0 +1,549 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --cyber-primary: #00f0ff;
+        --cyber-secondary: #ff003c;
+        --cyber-accent: #fcee0a;
+    }
+
+    .game-container h1 {
+        font-family: 'Courier New', monospace !important;
+        color: var(--cyber-primary) !important;
+        text-shadow: 0 0 15px var(--cyber-primary);
+        text-transform: uppercase;
+        letter-spacing: 5px;
+        -webkit-text-fill-color: var(--cyber-primary) !important;
+        background: none !important;
+    }
+
+    .subtitle {
+        color: var(--cyber-accent);
+        text-shadow: 0 0 5px var(--cyber-accent);
+        font-weight: bold;
+        letter-spacing: 2px;
+        font-family: 'Courier New', monospace;
+    }
+
+    .hud-panel {
+        background: rgba(0, 0, 0, 0.6) !important;
+        border: 1px solid var(--cyber-primary) !important;
+        box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.2) !important;
+        border-radius: 5px !important;
+        font-family: 'Courier New', monospace;
+    }
+
+    .hud-label {
+        color: #8892b0 !important;
+    }
+
+    .hud-value {
+        color: var(--cyber-primary) !important;
+        text-shadow: 0 0 10px var(--cyber-primary) !important;
+    }
+
+    .game-board-wrapper {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    .btn-cyber {
+        background: transparent;
+        color: var(--cyber-primary);
+        border: 1px solid var(--cyber-primary);
+        padding: 12px 24px;
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+        font-size: 0.9rem;
+    }
+
+    .btn-cyber:hover {
+        background: var(--cyber-primary);
+        color: #000;
+        box-shadow: 0 0 20px var(--cyber-primary);
+    }
+
+    /* Mode Modal */
+    #c4-mode-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(11, 15, 25, 0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 3000;
+        backdrop-filter: blur(5px);
+    }
+
+    .cyber-modal {
+        background: #1a2235 !important;
+        padding: 40px !important;
+        border: 2px solid var(--cyber-primary) !important;
+        box-shadow: 0 0 30px rgba(0, 240, 255, 0.5) !important;
+        text-align: center;
+        border-radius: 8px !important;
+        margin: 0 !important;
+        width: auto !important;
+        max-width: none !important;
+    }
+
+    .cyber-modal h2 {
+        color: #fff;
+        margin-bottom: 10px;
+        text-shadow: 0 0 10px var(--cyber-primary);
+        font-family: 'Courier New', monospace;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+    }
+
+    .cyber-modal p {
+        color: var(--cyber-primary);
+        margin-bottom: 25px;
+        font-family: 'Courier New', monospace;
+    }
+
+    .mode-buttons {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+    }
+
+    /* Board */
+    .c4-board {
+        background: rgba(0, 30, 80, 0.7);
+        padding: 12px;
+        border-radius: 8px;
+        border: 2px solid var(--cyber-primary);
+        box-shadow: 0 0 30px rgba(0, 240, 255, 0.2);
+        display: inline-block;
+    }
+
+    .c4-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 60px);
+        grid-template-rows: repeat(6, 60px);
+        gap: 6px;
+    }
+
+    .c4-cell {
+        width: 60px;
+        height: 60px;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: 2px solid rgba(0, 240, 255, 0.15);
+        position: relative;
+    }
+
+    .c4-cell:hover {
+        background: rgba(0, 240, 255, 0.1);
+        border-color: rgba(0, 240, 255, 0.4);
+    }
+
+    .c4-cell.p1 {
+        background: var(--cyber-secondary) !important;
+        border-color: #ff4d6d !important;
+        box-shadow: 0 0 12px var(--cyber-secondary);
+    }
+
+    .c4-cell.p2 {
+        background: var(--cyber-accent) !important;
+        border-color: #ffe44d !important;
+        box-shadow: 0 0 12px var(--cyber-accent);
+    }
+
+    .c4-cell.win {
+        animation: winGlow 0.4s infinite alternate;
+    }
+
+    @keyframes winGlow {
+        from {
+            box-shadow: 0 0 5px #fff;
+        }
+
+        to {
+            box-shadow: 0 0 25px #fff;
+            border-color: #fff !important;
+        }
+    }
+
+    /* Column hover indicator */
+    .col-indicators {
+        display: grid;
+        grid-template-columns: repeat(7, 60px);
+        gap: 6px;
+        margin-bottom: 8px;
+        padding: 0 12px;
+    }
+
+    .col-ind {
+        height: 20px;
+        text-align: center;
+        font-size: 1.2rem;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .c4-board:hover .col-ind {
+        opacity: 0.3;
+    }
+
+    .col-ind:hover {
+        opacity: 1 !important;
+    }
+
+    .col-ind.p1-turn {
+        color: var(--cyber-secondary);
+    }
+
+    .col-ind.p2-turn {
+        color: var(--cyber-accent);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Mode Modal -->
+<div id="c4-mode-modal">
+    <div class="cyber-modal">
+        <h2>Connect Four</h2>
+        <p>Select Combat Mode</p>
+        <div class="mode-buttons">
+            <button class="btn-cyber" onclick="setMode('pvp')">2 PLAYER (PvP)</button>
+            <button class="btn-cyber" onclick="setMode('pve')">VS COMPUTER</button>
+        </div>
+    </div>
+</div>
+
+<div class="container game-container">
+    <h1>Connect Four</h1>
+    <p class="subtitle">VERTICAL LINK PROTOCOL</p>
+
+    <div class="hud-panel">
+        <div class="hud-item">
+            <div class="hud-label">Active Node</div>
+            <div class="hud-value" id="turn">PLAYER 1</div>
+        </div>
+        <div class="hud-item">
+            <div class="hud-label">Mode</div>
+            <div class="hud-value" id="mode-display">---</div>
+        </div>
+    </div>
+
+    <div class="game-board-wrapper">
+        <div class="c4-board">
+            <div class="col-indicators" id="colInd"></div>
+            <div class="c4-grid" id="gridC4"></div>
+        </div>
+    </div>
+
+    <div style="margin-top: 30px; display: flex; gap: 15px;">
+        <button class="btn-cyber" onclick="resetGame()">RESET GRID</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        var grid = document.getElementById('gridC4');
+        var colInd = document.getElementById('colInd');
+        var turnEl = document.getElementById('turn');
+        var modeDisplay = document.getElementById('mode-display');
+        var modal = document.getElementById('c4-mode-modal');
+
+        var ROWS = 6, COLS = 7;
+        var board = [];
+        var currentPlayer = 1;
+        var gameActive = false;
+        var gameMode = 'pvp';
+        var aiThinking = false;
+
+        function initBoard() {
+            board = [];
+            for (var r = 0; r < ROWS; r++) {
+                board.push([]);
+                for (var c = 0; c < COLS; c++) board[r].push(0);
+            }
+        }
+
+        function buildUI() {
+            grid.innerHTML = '';
+            colInd.innerHTML = '';
+            for (var c = 0; c < COLS; c++) {
+                var ind = document.createElement('div');
+                ind.className = 'col-ind p1-turn';
+                ind.innerHTML = '▼';
+                ind.dataset.col = c;
+                ind.onclick = (function (col) { return function () { dropPiece(col); }; })(c);
+                colInd.appendChild(ind);
+            }
+            for (var r = 0; r < ROWS; r++) {
+                for (var c = 0; c < COLS; c++) {
+                    var cell = document.createElement('div');
+                    cell.className = 'c4-cell';
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+                    cell.onclick = (function (col) { return function () { dropPiece(col); }; })(c);
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        function updateUI() {
+            var cells = grid.children;
+            for (var r = 0; r < ROWS; r++) {
+                for (var c = 0; c < COLS; c++) {
+                    var idx = r * COLS + c;
+                    cells[idx].className = 'c4-cell';
+                    if (board[r][c] === 1) cells[idx].classList.add('p1');
+                    if (board[r][c] === 2) cells[idx].classList.add('p2');
+                }
+            }
+            // Update column indicators
+            var inds = colInd.children;
+            for (var i = 0; i < COLS; i++) {
+                inds[i].className = 'col-ind ' + (currentPlayer === 1 ? 'p1-turn' : 'p2-turn');
+            }
+        }
+
+        function dropPiece(col) {
+            if (!gameActive || aiThinking) return;
+            if (gameMode === 'pve' && currentPlayer === 2) return;
+
+            var row = getLowestRow(col);
+            if (row === -1) return;
+
+            board[row][col] = currentPlayer;
+            updateUI();
+            animateDrop(row, col);
+
+            if (window.playSound) window.playSound('click');
+
+            if (checkWin(row, col, currentPlayer)) {
+                gameActive = false;
+                highlightWin(row, col, currentPlayer);
+                turnEl.innerText = (gameMode === 'pve' && currentPlayer === 2) ? 'AI WINS!' : 'PLAYER ' + currentPlayer + ' WINS!';
+                turnEl.style.color = currentPlayer === 1 ? '#ff003c' : '#fcee0a';
+                if (window.showResult) window.showResult('PLAYER ' + currentPlayer + ' WINS', 100);
+                if (window.submitScore) window.submitScore('connect4', 100);
+                return;
+            }
+            if (isBoardFull()) {
+                gameActive = false;
+                turnEl.innerText = 'DRAW - GRID FULL';
+                turnEl.style.color = '#888';
+                if (window.showResult) window.showResult('GRID FULL', 50);
+                return;
+            }
+
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+            updateTurnDisplay();
+
+            if (gameMode === 'pve' && currentPlayer === 2 && gameActive) {
+                aiThinking = true;
+                turnEl.innerText = 'AI COMPUTING...';
+                setTimeout(aiMove, 400);
+            }
+        }
+
+        function getLowestRow(col) {
+            for (var r = ROWS - 1; r >= 0; r--) {
+                if (board[r][col] === 0) return r;
+            }
+            return -1;
+        }
+
+        function animateDrop(row, col) {
+            var idx = row * COLS + col;
+            var cell = grid.children[idx];
+            cell.style.transform = 'scale(1.2)';
+            setTimeout(function () { cell.style.transform = 'scale(1)'; }, 150);
+        }
+
+        function updateTurnDisplay() {
+            turnEl.innerText = 'PLAYER ' + currentPlayer;
+            turnEl.style.color = '#00f0ff';
+        }
+
+        function isBoardFull() {
+            for (var c = 0; c < COLS; c++) if (board[0][c] === 0) return false;
+            return true;
+        }
+
+        // === WIN CHECK ===
+        var directions = [[0, 1], [1, 0], [1, 1], [1, -1]];
+
+        function checkWin(row, col, player) {
+            for (var d = 0; d < directions.length; d++) {
+                var dr = directions[d][0], dc = directions[d][1];
+                var count = 1;
+                count += countDir(row, col, dr, dc, player);
+                count += countDir(row, col, -dr, -dc, player);
+                if (count >= 4) return true;
+            }
+            return false;
+        }
+
+        function countDir(row, col, dr, dc, player) {
+            var count = 0;
+            var r = row + dr, c = col + dc;
+            while (r >= 0 && r < ROWS && c >= 0 && c < COLS && board[r][c] === player) {
+                count++; r += dr; c += dc;
+            }
+            return count;
+        }
+
+        function highlightWin(row, col, player) {
+            for (var d = 0; d < directions.length; d++) {
+                var dr = directions[d][0], dc = directions[d][1];
+                var cells = [{ r: row, c: col }];
+                var r = row + dr, c = col + dc;
+                while (r >= 0 && r < ROWS && c >= 0 && c < COLS && board[r][c] === player) {
+                    cells.push({ r: r, c: c }); r += dr; c += dc;
+                }
+                r = row - dr; c = col - dc;
+                while (r >= 0 && r < ROWS && c >= 0 && c < COLS && board[r][c] === player) {
+                    cells.push({ r: r, c: c }); r -= dr; c -= dc;
+                }
+                if (cells.length >= 4) {
+                    for (var i = 0; i < cells.length; i++) {
+                        var idx = cells[i].r * COLS + cells[i].c;
+                        grid.children[idx].classList.add('win');
+                    }
+                }
+            }
+        }
+
+        // === AI (Smart heuristic) ===
+        function aiMove() {
+            if (!gameActive) { aiThinking = false; return; }
+
+            var bestCol = -1, bestScore = -Infinity;
+
+            // 1. Check if AI can win
+            for (var c = 0; c < COLS; c++) {
+                var r = getLowestRow(c);
+                if (r === -1) continue;
+                board[r][c] = 2;
+                if (checkWin(r, c, 2)) { board[r][c] = 0; bestCol = c; break; }
+                board[r][c] = 0;
+            }
+
+            // 2. Block player win
+            if (bestCol === -1) {
+                for (var c = 0; c < COLS; c++) {
+                    var r = getLowestRow(c);
+                    if (r === -1) continue;
+                    board[r][c] = 1;
+                    if (checkWin(r, c, 1)) { board[r][c] = 0; bestCol = c; break; }
+                    board[r][c] = 0;
+                }
+            }
+
+            // 3. Score each column
+            if (bestCol === -1) {
+                for (var c = 0; c < COLS; c++) {
+                    var r = getLowestRow(c);
+                    if (r === -1) continue;
+                    var sc = scorePosition(r, c);
+                    if (sc > bestScore) { bestScore = sc; bestCol = c; }
+                }
+            }
+
+            // 4. Fallback: pick center or random
+            if (bestCol === -1) {
+                var avail = [];
+                for (var c = 0; c < COLS; c++) if (getLowestRow(c) !== -1) avail.push(c);
+                bestCol = avail.length > 0 ? avail[Math.floor(Math.random() * avail.length)] : 0;
+            }
+
+            aiThinking = false;
+            var row = getLowestRow(bestCol);
+            if (row !== -1) {
+                board[row][bestCol] = 2;
+                updateUI();
+                animateDrop(row, bestCol);
+                if (window.playSound) window.playSound('click');
+
+                if (checkWin(row, bestCol, 2)) {
+                    gameActive = false;
+                    highlightWin(row, bestCol, 2);
+                    turnEl.innerText = 'AI WINS!';
+                    turnEl.style.color = '#fcee0a';
+                    if (window.showResult) window.showResult('AI DOMINATES', 0);
+                    return;
+                }
+                if (isBoardFull()) {
+                    gameActive = false;
+                    turnEl.innerText = 'DRAW';
+                    turnEl.style.color = '#888';
+                    return;
+                }
+                currentPlayer = 1;
+                updateTurnDisplay();
+            }
+        }
+
+        function scorePosition(row, col) {
+            var sc = 0;
+            // Prefer center
+            sc += (3 - Math.abs(col - 3)) * 3;
+            // Check how many in each direction
+            for (var d = 0; d < directions.length; d++) {
+                var dr = directions[d][0], dc = directions[d][1];
+                var mine = countDir(row, col, dr, dc, 2) + countDir(row, col, -dr, -dc, 2);
+                var opp = countDir(row, col, dr, dc, 1) + countDir(row, col, -dr, -dc, 1);
+                sc += mine * 4;
+                sc += opp * 2; // blocking is also good
+            }
+            // Avoid giving opponent a win above
+            if (row > 0) {
+                board[row][col] = 2;
+                board[row - 1][col] = 1;
+                if (checkWin(row - 1, col, 1)) sc -= 50;
+                board[row - 1][col] = 0;
+                board[row][col] = 0;
+            }
+            return sc;
+        }
+
+        // === MODE SELECTION ===
+        window.setMode = function (mode) {
+            gameMode = mode;
+            modal.style.display = 'none';
+            modeDisplay.innerText = mode === 'pvp' ? '2 PLAYER' : 'VS AI';
+            gameActive = true;
+            resetGameInternal();
+        };
+
+        function resetGameInternal() {
+            initBoard();
+            buildUI();
+            currentPlayer = 1;
+            gameActive = true;
+            aiThinking = false;
+            updateTurnDisplay();
+        }
+
+        window.resetGame = function () {
+            resetGameInternal();
+        };
+
+        // Init
+        initBoard();
+        buildUI();
+    })();
+</script>
+{% endblock %}

@@ -1,0 +1,583 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --cyber-primary: #00f0ff;
+        --cyber-secondary: #ff003c;
+        --cyber-accent: #fcee0a;
+        --cyber-bg: #0d1520;
+    }
+
+    .game-area {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 0;
+        font-family: 'Courier New', monospace;
+    }
+
+    .game-area h1 {
+        color: var(--cyber-primary) !important;
+        text-shadow: 0 0 15px var(--cyber-primary);
+        text-transform: uppercase;
+        letter-spacing: 5px;
+        -webkit-text-fill-color: var(--cyber-primary) !important;
+        background: none !important;
+        margin-bottom: 5px;
+    }
+
+    .subtitle {
+        color: var(--cyber-accent);
+        text-shadow: 0 0 5px var(--cyber-accent);
+        font-weight: bold;
+        letter-spacing: 2px;
+        margin-bottom: 20px;
+    }
+
+    .hud-container {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 20px;
+        width: 100%;
+        max-width: 540px;
+        justify-content: space-between;
+    }
+
+    .hud-box {
+        background: rgba(0, 0, 0, 0.6);
+        padding: 10px 20px;
+        border-left: 3px solid var(--cyber-primary);
+        flex: 1;
+    }
+
+    .hud-label {
+        font-size: 10px;
+        color: var(--cyber-primary);
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+
+    .hud-value {
+        font-size: 18px;
+        color: #fff;
+        text-shadow: 0 0 10px var(--cyber-primary);
+    }
+
+    .board-wrapper {
+        position: relative;
+        padding: 10px;
+        background: #000;
+        border: 2px solid var(--cyber-primary);
+        box-shadow: 0 0 30px rgba(0, 240, 255, 0.2);
+        border-radius: 8px;
+    }
+
+    .grid-checkers {
+        display: grid;
+        grid-template-columns: repeat(8, 65px);
+        grid-template-rows: repeat(8, 65px);
+    }
+
+    .checkers-cell {
+        width: 65px;
+        height: 65px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        cursor: pointer;
+    }
+
+    .cell-dark {
+        background: #0d1520;
+    }
+
+    .cell-light {
+        background: #1a2235;
+    }
+
+    .checkers-cell.highlight::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background: rgba(0, 240, 255, 0.3);
+        border-radius: 50%;
+        border: 2px solid var(--cyber-primary);
+    }
+
+    .checkers-cell.capture-highlight::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background: rgba(255, 0, 60, 0.3);
+        border-radius: 50%;
+        border: 2px solid var(--cyber-secondary);
+    }
+
+    .piece {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        position: relative;
+        transition: transform 0.2s, box-shadow 0.2s;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .piece.player1 {
+        background: radial-gradient(circle, #ff003c 30%, #a30026 100%);
+        border: 2px solid #ff4d6d;
+        box-shadow: 0 0 15px var(--cyber-secondary);
+    }
+
+    .piece.player2 {
+        background: radial-gradient(circle, #00f0ff 30%, #008891 100%);
+        border: 2px solid #4df0ff;
+        box-shadow: 0 0 15px var(--cyber-primary);
+    }
+
+    .piece.king::before {
+        content: '⬢';
+        color: #fff;
+        font-size: 24px;
+        text-shadow: 0 0 10px #fff;
+    }
+
+    .piece.selected {
+        transform: scale(1.1);
+        box-shadow: 0 0 30px #fff;
+        border-color: #fff;
+    }
+
+    .piece.turn-glow {
+        animation: pulse-glow 2s infinite;
+    }
+
+    @keyframes pulse-glow {
+        0% {
+            box-shadow: 0 0 15px var(--cyber-primary);
+        }
+
+        50% {
+            box-shadow: 0 0 25px var(--cyber-primary);
+        }
+
+        100% {
+            box-shadow: 0 0 15px var(--cyber-primary);
+        }
+    }
+
+    .controls-panel {
+        margin-top: 30px;
+        display: flex;
+        gap: 15px;
+    }
+
+    .btn-cyber {
+        background: transparent;
+        color: var(--cyber-primary);
+        border: 1px solid var(--cyber-primary);
+        padding: 12px 24px;
+        font-family: inherit;
+        font-weight: bold;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-cyber:hover {
+        background: var(--cyber-primary);
+        color: #000;
+        box-shadow: 0 0 20px var(--cyber-primary);
+    }
+
+    /* Selection Modal */
+    #mode-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+    }
+
+    .modal-content {
+        background: #000;
+        border: 2px solid var(--cyber-primary);
+        padding: 40px;
+        text-align: center;
+        box-shadow: 0 0 50px rgba(0, 240, 255, 0.3);
+        border-radius: 10px;
+    }
+
+    .modal-content h2 {
+        color: var(--cyber-primary);
+        margin-bottom: 30px;
+        letter-spacing: 5px;
+    }
+
+    .mode-options {
+        display: flex;
+        gap: 20px;
+    }
+
+    .mode-btn {
+        flex: 1;
+        padding: 20px;
+        border: 1px solid var(--cyber-primary);
+        color: var(--cyber-primary);
+        background: transparent;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .mode-btn:hover {
+        background: rgba(0, 240, 255, 0.1);
+        box-shadow: 0 0 20px var(--cyber-primary);
+        transform: translateY(-5px);
+    }
+
+    .mode-btn i {
+        font-size: 24px;
+        display: block;
+        margin-bottom: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="mode-modal">
+    <div class="modal-content">
+        <h2>INITIALIZING SYSTEM</h2>
+        <div class="mode-options">
+            <button class="mode-btn" onclick="startGame('pvp')">
+                PVP MODE
+                <div style="font-size: 10px; margin-top: 5px;">LOCAL MULTIPLAYER</div>
+            </button>
+            <button class="mode-btn" onclick="startGame('pve')">
+                CYBERNETIC AI
+                <div style="font-size: 10px; margin-top: 5px;">VS COMPUTER</div>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="container game-area">
+    <h1>Cyber Checkers</h1>
+    <p class="subtitle">TACTICAL GRID WARFARE</p>
+
+    <div class="hud-container">
+        <div class="hud-box">
+            <div class="hud-label">Current Node</div>
+            <div class="hud-value" id="turn-id">PLAYER 1</div>
+        </div>
+        <div class="hud-box">
+            <div class="hud-label">System Mode</div>
+            <div class="hud-value" id="mode-id">PVP</div>
+        </div>
+        <div class="hud-box" id="ex-box" style="display: none;">
+            <div class="hud-label">Exhaustion Protocol</div>
+            <div class="hud-value" id="moves-id">20</div>
+        </div>
+    </div>
+
+    <div class="board-wrapper">
+        <div class="grid-checkers" id="checkersBoard"></div>
+    </div>
+
+    <div class="controls-panel">
+        <button class="btn-cyber" onclick="showModal()">SWAP INTERFACE</button>
+        <button class="btn-cyber" onclick="resetBoard()">RESET GRID</button>
+    </div>
+
+    <p id="winner-msg" style="margin-top: 20px; color: var(--cyber-secondary); font-weight: bold; display: none;"></p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        const boardEl = document.getElementById('checkersBoard');
+        const turnEl = document.getElementById('turn-id');
+        const modeEl = document.getElementById('mode-id');
+        const modal = document.getElementById('mode-modal');
+        const winnerEl = document.getElementById('winner-msg');
+
+        let board = [];
+        let turn = 1; // 1 = Player 1 (Red), 2 = Player 2 (Blue)
+        let selected = null;
+        let gameMode = 'pvp';
+        let gameActive = false;
+        let possibleMoves = [];
+        let movesLeft = 20;
+        let countdownActive = false;
+        const exBox = document.getElementById('ex-box');
+        const movesEl = document.getElementById('moves-id');
+
+        window.startGame = (mode) => {
+            gameMode = mode;
+            modeEl.innerText = mode === 'pvp' ? 'PVP MODE' : 'AI CORE';
+            modal.style.display = 'none';
+            resetBoard();
+        };
+
+        window.showModal = () => modal.style.display = 'flex';
+
+        window.resetBoard = () => {
+            board = [];
+            for (let r = 0; r < 8; r++) {
+                board[r] = [];
+                for (let c = 0; c < 8; c++) {
+                    if ((r + c) % 2 !== 0) {
+                        if (r < 3) board[r][c] = { player: 2, king: false };
+                        else if (r > 4) board[r][c] = { player: 1, king: false };
+                        else board[r][c] = null;
+                    } else {
+                        board[r][c] = null;
+                    }
+                }
+            }
+            turn = 1;
+            selected = null;
+            gameActive = true;
+            movesLeft = 20;
+            countdownActive = false;
+            exBox.style.display = 'none';
+            winnerEl.style.display = 'none';
+            render();
+            updateHUD();
+        };
+
+        function render() {
+            boardEl.innerHTML = '';
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const cell = document.createElement('div');
+                    cell.className = `checkers-cell ${(r + c) % 2 === 0 ? 'cell-light' : 'cell-dark'}`;
+
+                    // Highlight moves
+                    const move = possibleMoves.find(m => m.r === r && m.c === c);
+                    if (move) {
+                        cell.classList.add(move.capture ? 'capture-highlight' : 'highlight');
+                    }
+
+                    if (board[r][c]) {
+                        const p = document.createElement('div');
+                        p.className = `piece player${board[r][c].player}`;
+                        if (board[r][c].king) p.classList.add('king');
+                        if (selected && selected.r === r && selected.c === c) p.classList.add('selected');
+                        cell.appendChild(p);
+                    }
+
+                    cell.onclick = () => onCellClick(r, c);
+                    boardEl.appendChild(cell);
+                }
+            }
+        }
+
+        function onCellClick(r, c) {
+            if (!gameActive) return;
+            if (gameMode === 'pve' && turn === 2) return;
+
+            const piece = board[r][c];
+
+            if (piece && piece.player === turn) {
+                selected = { r, c };
+                possibleMoves = getValidMoves(r, c);
+                if (window.playSound) window.playSound('click');
+            } else if (selected) {
+                const move = possibleMoves.find(m => m.r === r && m.c === c);
+                if (move) {
+                    executeMove(selected.r, selected.c, r, c, move.capture);
+                    return;
+                } else {
+                    selected = null;
+                    possibleMoves = [];
+                }
+            }
+            render();
+        }
+
+        function getValidMoves(r, c) {
+            const piece = board[r][c];
+            const moves = [];
+            const directions = piece.king ? [[1, 1], [1, -1], [-1, 1], [-1, -1]] :
+                (piece.player === 1 ? [[-1, 1], [-1, -1]] : [[1, 1], [1, -1]]);
+
+            directions.forEach(([dr, dc]) => {
+                // Simple move
+                const nr = r + dr, nc = c + dc;
+                if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && !board[nr][nc]) {
+                    moves.push({ r: nr, c: nc, capture: null });
+                }
+                // Capture move
+                const cr = r + dr * 2, cc = c + dc * 2;
+                const mr = r + dr, mc = c + dc;
+                if (cr >= 0 && cr < 8 && cc >= 0 && cc < 8 && !board[cr][cc] &&
+                    board[mr][mc] && board[mr][mc].player !== piece.player) {
+                    moves.push({ r: cr, c: cc, capture: { r: mr, c: mc } });
+                }
+            });
+            return moves;
+        }
+
+        function executeMove(fr, fc, tr, tc, capture) {
+            const piece = board[fr][fc];
+            board[tr][tc] = piece;
+            board[fr][fc] = null;
+
+            if (capture) {
+                board[capture.r][capture.c] = null;
+                if (window.playSound) window.playSound('eat');
+            } else {
+                if (window.playSound) window.playSound('click');
+            }
+
+            // Kinging
+            if (turn === 1 && tr === 0) piece.king = true;
+            if (turn === 2 && tr === 7) piece.king = true;
+
+            selected = null;
+            possibleMoves = [];
+
+            // Handle Move Countdown Rule
+            checkWinner();
+            if (gameActive && countdownActive) {
+                movesLeft--;
+                if (movesLeft <= 0) {
+                    resolveExhaustion();
+                    return;
+                }
+            }
+
+            if (gameActive) {
+                turn = turn === 1 ? 2 : 1;
+                updateHUD();
+                render();
+                if (gameMode === 'pve' && turn === 2) {
+                    setTimeout(aiMove, 600);
+                }
+            } else {
+                render();
+            }
+        }
+
+        function aiMove() {
+            if (!gameActive) return;
+            const allPieces = [];
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if (board[r][c] && board[r][c].player === 2) allPieces.push({ r, c });
+                }
+            }
+
+            let bestMove = null;
+            let bestSource = null;
+
+            // Shuffle to avoid predictable AI
+            allPieces.sort(() => Math.random() - 0.5);
+
+            // Prioritize captures
+            for (const p of allPieces) {
+                const moves = getValidMoves(p.r, p.c);
+                const captures = moves.filter(m => m.capture);
+                if (captures.length > 0) {
+                    bestMove = captures[0];
+                    bestSource = p;
+                    break;
+                }
+            }
+
+            // If no capture, take any valid move
+            if (!bestMove) {
+                for (const p of allPieces) {
+                    const moves = getValidMoves(p.r, p.c);
+                    if (moves.length > 0) {
+                        bestMove = moves[0];
+                        bestSource = p;
+                        break;
+                    }
+                }
+            }
+
+            if (bestMove) {
+                executeMove(bestSource.r, bestSource.c, bestMove.r, bestMove.c, bestMove.capture);
+            } else {
+                gameActive = false;
+                showWinner(1);
+            }
+        }
+
+        function checkWinner() {
+            let p1Count = 0, p2Count = 0;
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if (board[r][c]) {
+                        if (board[r][c].player === 1) p1Count++;
+                        else p2Count++;
+                    }
+                }
+            }
+
+            // Trigger countdown if any player has only 1 piece
+            if (!countdownActive && (p1Count <= 1 || p2Count <= 1)) {
+                countdownActive = true;
+                exBox.style.display = 'block';
+            }
+
+            if (p1Count === 0) showWinner(2);
+            if (p2Count === 0) showWinner(1);
+        }
+
+        function resolveExhaustion() {
+            let p1Count = 0, p2Count = 0;
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if (board[r][c]) {
+                        if (board[r][c].player === 1) p1Count++;
+                        else p2Count++;
+                    }
+                }
+            }
+
+            if (p1Count > p2Count) showWinner(1, "EXHAUSTION WIN (MORE ASSETS)");
+            else if (p2Count > p1Count) showWinner(2, "EXHAUSTION WIN (MORE ASSETS)");
+            else showWinner(0, "SYSTEM TIE (EQUAL ASSETS)");
+        }
+
+        function showWinner(playerNum, customMsg) {
+            gameActive = false;
+            exBox.style.display = 'none';
+            if (playerNum === 0) {
+                winnerEl.innerText = customMsg || "SYSTEM TIE. NEITHER SIDE HAS TACTICAL ADVANTAGE.";
+            } else {
+                winnerEl.innerText = customMsg || `NODE ${playerNum} HAS ELIMINATED ALL THREATS.`;
+            }
+            winnerEl.style.display = 'block';
+            if (window.submitScore) window.submitScore('checkers', 100);
+        }
+
+        function updateHUD() {
+            turnEl.innerText = turn === 1 ? 'PLAYER 1' : (gameMode === 'pve' ? 'CYBER AI' : 'PLAYER 2');
+            turnEl.style.color = turn === 1 ? 'var(--cyber-secondary)' : 'var(--cyber-primary)';
+            if (countdownActive) {
+                movesEl.innerText = movesLeft;
+            }
+        }
+
+        // Modal Initial Show
+        modal.style.display = 'flex';
+
+    })();
+</script>
+{% endblock %}

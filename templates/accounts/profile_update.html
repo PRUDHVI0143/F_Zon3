@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    .update-card {
+        background: rgba(20, 20, 30, 0.9);
+        border: 1px solid var(--primary);
+        padding: 50px;
+        border-radius: 30px;
+        box-shadow: 0 0 50px rgba(0, 242, 255, 0.1);
+    }
+
+    .form-group label {
+        display: block;
+        color: var(--primary);
+        font-size: 0.8rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        background: rgba(0, 0, 0, 0.3) !important;
+        border: 1px solid rgba(0, 242, 255, 0.2) !important;
+        color: #fff !important;
+        padding: 15px !important;
+        border-radius: 12px !important;
+        margin-bottom: 25px !important;
+        transition: all 0.3s;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+        border-color: var(--primary) !important;
+        box-shadow: 0 0 15px var(--primary-glow) !important;
+        outline: none !important;
+    }
+
+    .update-title {
+        color: #fff;
+        text-shadow: 0 0 10px var(--primary-glow);
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 5px;
+        margin-bottom: 40px;
+    }
+
+    .btn-action {
+        width: 100%;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 100px 0; max-width: 600px;">
+    <div class="update-card">
+        <h2 class="update-title">Identity Update</h2>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                <label>{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: -15px; margin-bottom: 15px;">{{
+                    field.help_text }}</p>
+                {% endif %}
+                {% if field.errors %}
+                <div style="color: var(--accent); font-size: 0.8rem; margin-top: -15px; margin-bottom: 15px;">
+                    {{ field.errors.0 }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary btn-action">COMMIT CHANGES</button>
+            <a href="{% url 'accounts:profile' %}" class="btn logout-btn btn-action" style="text-align: center;">ABORT
+                OPERATION</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

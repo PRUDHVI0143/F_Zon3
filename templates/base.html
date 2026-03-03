@@ -1,0 +1,126 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}F ZoN3 - ultimate Gaming Platform{% endblock %}</title>
+    <!-- Google Fonts Optimized -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@300;500;700&display=swap"
+        rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+    <script>
+        // IMMEDIATE THEME INITIALIZATION
+        (function () {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    document.body.classList.add('light-theme');
+                });
+            }
+        })();
+    </script>
+</head>
+
+<body class="">
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="{% url 'dashboard:home' %}" class="logo">
+                <span class="f-letter">F</span> <span class="zone-text">ZoN3</span>
+                {% if user.is_staff %}<span class="admin-badge">ADMIN</span>{% endif %}
+            </a>
+            <div class="nav-links">
+                <!-- Theme Toggle -->
+                <button id="theme-toggle" class="theme-switch" title="Toggle System Mode">
+                    <i class="fas fa-moon" id="theme-icon"></i>
+                </button>
+                <a href="{% url 'dashboard:home' %}" class="nav-link"><i class="fas fa-gamepad"></i> Games</a>
+                <a href="{% url 'leaderboard:global' %}" class="nav-link"><i class="fas fa-trophy"></i> Leaderboard</a>
+                <a href="{% url 'dashboard:analytics' %}" class="nav-link"><i class="fas fa-chart-line"></i>
+                    Analytics</a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'accounts:profile' %}" class="nav-link"><i class="fas fa-user"></i> Profile</a>
+                <form action="{% url 'accounts:logout' %}" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-btn">Logout</button>
+                </form>
+                {% else %}
+                <a href="{% url 'accounts:login' %}" class="nav-link">Login</a>
+                <a href="{% url 'accounts:register' %}" class="btn btn-primary">Register</a>
+                {% endif %}
+            </div>
+            <div class="menu-toggle" id="mobile-menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        {% if messages %}
+        <div class="container messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Game Instructions Modal -->
+    <div id="instructionModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2 id="modalTitle">Game Instructions</h2>
+            <div id="modalBody" class="modal-body">
+                <!-- Instruction content goes here -->
+            </div>
+            <button class="btn btn-primary" id="closeModalBtn">Got it!</button>
+        </div>
+    </div>
+
+    <!-- Result Overlay -->
+    <div class="result-overlay" id="resultOverlay">
+        <div class="result-card" id="resultCard">
+            <h2 class="result-title" id="resTitle">Game Over</h2>
+            <div class="result-score" id="resScore">0</div>
+            <p style="color: var(--text-muted); margin-bottom: 30px;">Your score has been updated in the global
+                leaderboard.</p>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button class="btn btn-primary" onclick="location.reload()">Play Again</button>
+                <button class="btn logout-btn" id="closeResultBtn">Back to Zone</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container footer-content">
+            <p>&copy; 2026 F ZoN3 Gaming. All rights reserved.</p>
+            <div class="social-links">
+                <a href="#"><i class="fab fa-discord"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts Optimized -->
+    <script src="{% static 'js/main.js' %}" defer></script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

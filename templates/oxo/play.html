@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --cyber-bg: #0b0f19;
+        --cyber-board: #111a2f;
+        --cyber-primary: #00f0ff;
+        --cyber-secondary: #ff003c;
+        --cyber-accent: #fcee0a;
+        --glow-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+    }
+
+    .hud-panel {
+        display: flex;
+        justify-content: space-between;
+        width: 400px;
+        background: rgba(0, 0, 0, 0.6) !important;
+        border: 1px solid var(--cyber-primary) !important;
+        box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.2) !important;
+        padding: 15px 30px;
+        margin-bottom: 30px;
+        border-radius: 5px !important;
+        font-family: 'Courier New', Courier, monospace;
+        position: relative;
+    }
+    .hud-label { color: #8892b0; font-size: 0.9rem; text-transform: uppercase; }
+    .hud-value { color: var(--cyber-primary) !important; font-weight: bold; font-size: 1.2rem; text-shadow: 0 0 10px var(--cyber-primary) !important; }
+
+    .game-board-wrapper {
+        position: relative;
+    }
+
+    .game-board {
+        display: grid;
+        grid-template-columns: repeat(3, 120px);
+        grid-template-rows: repeat(3, 120px);
+        gap: 10px;
+    }
+    .cell {
+        background: rgba(0, 0, 0, 0.6) !important;
+        border: 2px solid rgba(0, 240, 255, 0.4) !important;
+        border-radius: 5px !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3.5rem;
+        font-weight: 900;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        user-select: none;
+    }
+    .cell:hover {
+        background: rgba(0, 240, 255, 0.1) !important;
+        border-color: var(--cyber-primary) !important;
+        box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+    }
+    .cell.x {
+        color: var(--cyber-secondary) !important;
+        text-shadow: 0 0 15px var(--cyber-secondary);
+    }
+    .cell.o {
+        color: var(--cyber-primary) !important;
+        text-shadow: 0 0 15px var(--cyber-primary);
+    }
+    .cell.win-cell {
+        animation: winPulse 0.5s infinite alternate;
+    }
+    @keyframes winPulse {
+        from { box-shadow: 0 0 5px var(--cyber-accent); }
+        to { box-shadow: 0 0 30px var(--cyber-accent); border-color: var(--cyber-accent) !important; }
+    }
+
+    /* Mode Modal - uses fixed positioning and unique class to avoid base.html conflict */
+    #oxo-mode-modal {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(11, 15, 25, 0.95);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 3000;
+        backdrop-filter: blur(5px);
+    }
+    .cyber-modal {
+        background: #1a2235 !important;
+        padding: 40px !important;
+        border: 2px solid var(--cyber-primary) !important;
+        box-shadow: 0 0 30px rgba(0, 240, 255, 0.5) !important;
+        text-align: center;
+        border-radius: 8px !important;
+        margin: 0 !important;
+        width: auto !important;
+        max-width: none !important;
+    }
+    .cyber-modal h2 {
+        color: #fff;
+        margin-bottom: 10px;
+        text-shadow: 0 0 10px var(--cyber-primary);
+        font-family: 'Courier New', Courier, monospace;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+    }
+    .cyber-modal p {
+        color: var(--cyber-primary);
+        margin-bottom: 25px;
+        font-family: 'Courier New', Courier, monospace;
+    }
+    .mode-buttons { display: flex; gap: 20px; justify-content: center; }
+
+    .btn-cyber {
+        background: transparent;
+        color: var(--cyber-primary);
+        border: 1px solid var(--cyber-primary);
+        padding: 12px 24px;
+        font-family: 'Courier New', Courier, monospace;
+        font-weight: bold;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+        font-size: 1rem;
+    }
+    .btn-cyber:hover {
+        background: var(--cyber-primary);
+        color: #000;
+        box-shadow: 0 0 20px var(--cyber-primary);
+    }
+
+    .game-container h1 {
+        font-family: 'Courier New', Courier, monospace !important;
+        color: var(--cyber-primary) !important;
+        text-shadow: 0 0 15px var(--cyber-primary);
+        text-transform: uppercase;
+        letter-spacing: 5px;
+        -webkit-text-fill-color: var(--cyber-primary) !important;
+        background: none !important;
+    }
+    .subtitle {
+        color: var(--cyber-accent);
+        text-shadow: 0 0 5px var(--cyber-accent);
+        font-weight: bold;
+        margin-bottom: 20px;
+        letter-spacing: 2px;
+        font-family: 'Courier New', Courier, monospace;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Mode Selection Modal (FIXED: position fixed, unique ID, unique class) -->
+<div id="oxo-mode-modal">
+    <div class="cyber-modal">
+        <h2>BINARY CONFLICT</h2>
+        <p>Select Combat Mode</p>
+        <div class="mode-buttons">
+            <button class="btn-cyber" onclick="setGameMode('pvp')">2 PLAYER (PvP)</button>
+            <button class="btn-cyber" onclick="setGameMode('pve')">VS COMPUTER</button>
+        </div>
+    </div>
+</div>
+
+<div class="container game-container">
+    <h1>Binary Conflict</h1>
+    <p class="subtitle">NEURAL GRID WARFARE</p>
+
+    <div class="hud-panel">
+        <div class="hud-item">
+            <div class="hud-label">Active Node</div>
+            <div class="hud-value" id="status">PLAYER X</div>
+        </div>
+        <div class="hud-item" style="text-align: right;">
+            <div class="hud-label">Engagement</div>
+            <div class="hud-value" id="mode-display">---</div>
+        </div>
+    </div>
+
+    <div class="game-board-wrapper">
+        <div class="game-board" id="board">
+            {% for i in "012345678" %}<div class="cell" data-index="{{forloop.counter0}}"></div>{% endfor %}
+        </div>
+    </div>
+
+    <div style="margin-top: 30px; display: flex; gap: 15px;">
+        <button id="reset-btn" class="btn-cyber">RESET MATRIX</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/games/oxo.js' %}"></script>
+{% endblock %}

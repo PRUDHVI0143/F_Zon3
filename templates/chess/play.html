@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --cyber-bg: #0b0f19;
+        --cyber-board: #111a2f;
+        --cyber-primary: #00f0ff;
+        --cyber-secondary: #ff003c;
+        --cyber-accent: #fcee0a;
+        --glow-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+    }
+    body {
+        background: var(--cyber-bg);
+        color: #fff;
+    }
+    .game-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px;
+    }
+    h1 {
+        font-family: 'Courier New', Courier, monospace;
+        color: var(--cyber-primary);
+        text-shadow: 0 0 10px var(--cyber-primary);
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+    .hud-panel {
+        display: flex;
+        justify-content: space-between;
+        width: 560px;
+        background: #1a2235;
+        border: 1px solid var(--cyber-primary);
+        box-shadow: inset 0 0 10px rgba(0, 240, 255, 0.2);
+        padding: 10px 20px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        font-family: 'Courier New', Courier, monospace;
+    }
+    .hud-label { color: #8892b0; font-size: 0.9rem; }
+    .hud-value { color: var(--cyber-primary); font-weight: bold; font-size: 1.1rem; }
+    
+    .chess-board {
+        width: 560px;
+        height: 560px;
+        display: grid;
+        grid-template-columns: repeat(8, 70px);
+        grid-template-rows: repeat(8, 70px);
+        border: 2px solid var(--cyber-primary);
+        box-shadow: 0 0 30px rgba(0, 240, 255, 0.15);
+        background: var(--cyber-board);
+        position: relative;
+    }
+    .c-cell {
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+    }
+    /* Cyber Board Colors */
+    .c-cell.white { background: rgba(30, 41, 59, 0.8); }
+    .c-cell.black { background: rgba(15, 23, 42, 0.9); }
+    
+    .c-cell:hover { background: rgba(0, 240, 255, 0.2) !important; filter: brightness(1.2); }
+    
+    .c-cell.selected { 
+        background: rgba(252, 238, 10, 0.3) !important; 
+        box-shadow: inset 0 0 15px var(--cyber-accent) !important;
+        border: 1px solid var(--cyber-accent);
+    }
+    .c-cell.last-move { 
+        background: rgba(0, 240, 255, 0.2) !important; 
+    }
+    .c-cell.legal-move::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background: rgba(0, 240, 255, 0.6);
+        border-radius: 50%;
+        box-shadow: 0 0 10px var(--cyber-primary);
+    }
+    .c-cell.legal-capture::after {
+        content: '';
+        position: absolute;
+        width: 60px;
+        height: 60px;
+        border: 3px solid var(--cyber-secondary);
+        border-radius: 50%;
+        box-shadow: 0 0 15px var(--cyber-secondary);
+        background: transparent;
+    }
+    
+    /* Pieces Glow */
+    .piece-w { 
+        color: #fff; 
+        filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+    }
+    .piece-b { 
+        color: #a4b1cd;
+        filter: drop-shadow(0 0 8px rgba(255, 0, 60, 0.8));
+    }
+    .c-cell span {
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: inline-block;
+        user-select: none;
+    }
+    .c-cell:active span { transform: scale(1.15); }
+
+    .btn-cyber {
+        background: transparent;
+        color: var(--cyber-primary);
+        border: 1px solid var(--cyber-primary);
+        padding: 10px 20px;
+        font-family: 'Courier New', Courier, monospace;
+        font-weight: bold;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+    }
+    .btn-cyber:hover {
+        background: var(--cyber-primary);
+        color: #000;
+        box-shadow: 0 0 20px var(--cyber-primary);
+    }
+
+    /* Modal Styles */
+    #mode-modal {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(11, 15, 25, 0.9);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        backdrop-filter: blur(5px);
+    }
+    .modal-content {
+        background: #1a2235;
+        padding: 40px;
+        border: 2px solid var(--cyber-primary);
+        box-shadow: var(--glow-shadow);
+        text-align: center;
+        border-radius: 8px;
+    }
+    .modal-content h2 { color: #fff; margin-bottom: 30px; }
+    .mode-buttons { display: flex; gap: 20px; justify-content: center; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container game-container">
+    <h1>Grandmaster Protocol</h1>
+    
+    <div class="hud-panel">
+        <div class="hud-item">
+            <div class="hud-label">Current Turn</div>
+            <div class="hud-value" id="status">WHITE</div>
+        </div>
+        <div class="hud-item" style="text-align: right;">
+            <div class="hud-label">Game Mode</div>
+            <div class="hud-value" id="mode-display">---</div>
+        </div>
+    </div>
+
+    <div class="game-board-wrapper" style="position: relative;">
+        <!-- Mode Selection Modal -->
+        <div id="mode-modal">
+            <div class="modal-content">
+                <h2>SELECT ENGAGEMENT MODE</h2>
+                <div class="mode-buttons">
+                    <button class="btn-cyber" onclick="setGameMode('pvp')">2 Player (PvP)</button>
+                    <button class="btn-cyber" onclick="setGameMode('pve')">VS Computer</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="chess-board" id="board"></div>
+    </div>
+
+    <div style="margin-top: 30px; display: flex; gap: 15px;">
+        <button class="btn-cyber" onclick="location.reload()">Reset Matrix</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/vendor/chess.min.js' %}"></script>
+<script src="{% static 'js/games/chess.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class='auth-container'>
+    <h2>Create Account</h2>
+    <form method='post'>
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type='submit' class='btn btn-primary' style='width: 100%; margin-top: 20px;'>Register</button>
+    </form>
+    <p style='margin-top: 20px; text-align: center;'>Already have an account? <a href='{% url "accounts:login" %}'>Login here</a></p>
+</div>
+{% endblock %}

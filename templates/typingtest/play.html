@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root { --cyber-primary: #00f0ff; --cyber-secondary: #ff003c; --cyber-accent: #fcee0a; }
+    .game-container h1 { font-family: 'Courier New', monospace !important; color: var(--cyber-primary) !important; text-shadow: 0 0 15px var(--cyber-primary); text-transform: uppercase; letter-spacing: 5px; -webkit-text-fill-color: var(--cyber-primary) !important; background: none !important; }
+    .subtitle { color: var(--cyber-accent); text-shadow: 0 0 5px var(--cyber-accent); font-weight: bold; letter-spacing: 2px; font-family: 'Courier New', monospace; }
+    .hud-panel { background: rgba(0,0,0,0.6) !important; border: 1px solid var(--cyber-primary) !important; box-shadow: inset 0 0 15px rgba(0,240,255,0.2) !important; border-radius: 5px !important; font-family: 'Courier New', monospace; }
+    .hud-label { color: #8892b0 !important; }
+    .hud-value { color: var(--cyber-primary) !important; text-shadow: 0 0 10px var(--cyber-primary) !important; }
+    .game-board-wrapper { background: transparent !important; border: none !important; box-shadow: none !important; width: 100%; }
+    .btn-cyber { background: transparent; color: var(--cyber-primary); border: 1px solid var(--cyber-primary); padding: 12px 24px; font-family: 'Courier New', monospace; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: all 0.3s; box-shadow: 0 0 10px rgba(0,240,255,0.2); }
+    .btn-cyber:hover { background: var(--cyber-primary); color: #000; box-shadow: 0 0 20px var(--cyber-primary); }
+
+    .display-text {
+        font-size: 1.4rem; background: rgba(0,0,0,0.5) !important; padding: 35px; border-radius: 8px;
+        line-height: 2; color: #555; border: 2px solid rgba(0,240,255,0.3) !important;
+        text-align: left; font-family: 'Courier New', monospace;
+        box-shadow: 0 0 20px rgba(0,240,255,0.1);
+    }
+    .display-text .correct { color: var(--cyber-primary) !important; border-bottom: 2px solid var(--cyber-primary); text-shadow: 0 0 5px var(--cyber-primary); }
+    .display-text .wrong { color: var(--cyber-secondary) !important; background: rgba(255,0,60,0.15); border-bottom: 2px solid var(--cyber-secondary); }
+    .cursor { width: 3px; height: 1.5rem; background: var(--cyber-primary); display: inline-block; animation: blink 0.5s infinite; vertical-align: middle; box-shadow: 0 0 5px var(--cyber-primary); }
+    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } }
+    .type-input { width: 100%; background: transparent; border: none; color: transparent; position: absolute; top: 0; left: 0; z-index: -10; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container game-container" style="max-width: 900px;">
+    <h1>Data Stream Sync</h1>
+    <p class="subtitle">NEURAL TYPING PROTOCOL</p>
+
+    <div class="hud-panel">
+        <div class="hud-item"><div class="hud-label">Bitrate (WPM)</div><div class="hud-value" id="wpm">00</div></div>
+        <div class="hud-item"><div class="hud-label">Integrity</div><div class="hud-value" id="acc">100%</div></div>
+        <div class="hud-item"><div class="hud-label">Time Left</div><div class="hud-value" id="timer">60</div></div>
+    </div>
+
+    <div class="game-board-wrapper" style="width: 100%;">
+        <div class="display-text" id="displayText">System idle. Initiate bridge for data transfer...</div>
+    </div>
+
+    <input type="text" class="type-input" id="typeInput">
+
+    <div style="margin-top: 30px; display: flex; gap: 15px;">
+        <button class="btn-cyber" onclick="startGame()">BRIDGE CONNECTION</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/games/typingtest.js' %}"></script>
+{% endblock %}

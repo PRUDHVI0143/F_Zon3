@@ -1,0 +1,466 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    /* Full Page Cyber Background */
+    #cyber-bg-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -10;
+        background: #050a14;
+    }
+
+    .hero-banner {
+        /* Premium Animated Background */
+        background: linear-gradient(-45deg, #050a14, #0a0b1e, #061121, #0a1b2d) !important;
+        background-size: 400% 400% !important;
+        animation: gradientScroll 15s ease infinite !important;
+        border: 1px solid var(--primary-glow) !important;
+        position: relative;
+        overflow: hidden;
+    }
+
+    @keyframes gradientScroll {
+        0% {
+            background-position: 0% 50%;
+        }
+
+        50% {
+            background-position: 100% 50%;
+        }
+
+        100% {
+            background-position: 0% 50%;
+        }
+    }
+
+    /* --- HIGH LEVEL ANIMATIONS --- */
+    @keyframes cyberSlide {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+            filter: blur(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+            filter: blur(0);
+        }
+    }
+
+    @keyframes floatHUD {
+
+        0%,
+        100% {
+            transform: translateY(0) rotate(0deg);
+        }
+
+        50% {
+            transform: translateY(-15px) rotate(2deg);
+        }
+    }
+
+    @keyframes scanlineMove {
+        0% {
+            transform: translateY(-100%);
+        }
+
+        100% {
+            transform: translateY(100%);
+        }
+    }
+
+    .stagger-item {
+        opacity: 0;
+        animation: cyberSlide 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+    }
+
+    .stat-item:nth-child(1) {
+        animation-delay: 0.1s;
+    }
+
+    .stat-item:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .stat-item:nth-child(3) {
+        animation-delay: 0.3s;
+    }
+
+    .stat-item:nth-child(4) {
+        animation-delay: 0.4s;
+    }
+
+    .game-card {
+        transition: transform 0.4s cubic-bezier(0.2, 0, 0.2, 1), box-shadow 0.4s ease;
+        transform-style: preserve-3d;
+        perspective: 1000px;
+        background: rgba(255, 255, 255, 0.03) !important;
+        backdrop-filter: blur(10px);
+    }
+
+    .game-card:hover {
+        box-shadow: 0 20px 50px rgba(0, 242, 255, 0.25);
+    }
+
+    .card-inner {
+        transition: transform 0.1s;
+    }
+
+    .floating-hud {
+        position: absolute;
+        pointer-events: none;
+        z-index: 2;
+        animation: floatHUD 6s ease-in-out infinite;
+    }
+
+    .scanline {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 80px;
+        background: linear-gradient(to bottom, transparent, rgba(0, 242, 255, 0.05), transparent);
+        animation: scanlineMove 6s linear infinite;
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    .hud-element {
+        position: absolute;
+        font-family: 'Courier New', monospace;
+        font-size: 10px;
+        color: var(--primary);
+        opacity: 0.4;
+        text-transform: uppercase;
+        pointer-events: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Full Screen Animated Background Layer -->
+<canvas id="cyber-bg-canvas"></canvas>
+
+<div class="container" style="padding: 40px 0;">
+    <div class="hero-banner glass stagger-item"
+        style="height: 380px; border-radius: 40px; display: flex; flex-direction: column; justify-content: center; padding: 60px; position: relative; overflow: hidden;">
+
+        <div class="scanline"></div>
+
+        <!-- FLOATING HUD ELEMENTS -->
+        <div class="floating-hud"
+            style="top: 10%; right: 15%; width: 120px; height: 120px; border: 1px solid rgba(0, 242, 255, 0.2); border-radius: 50%; border-top: 4px solid var(--primary);">
+        </div>
+        <div class="floating-hud"
+            style="bottom: 15%; left: 5%; width: 80px; height: 80px; border: 1px dashed rgba(255, 49, 49, 0.3); border-radius: 10px; animation-delay: -3s;">
+        </div>
+
+        <!-- AI GENERATED CYBERPUNK DASHBOARD BACKGROUND LAYER -->
+        <img src="https://image.pollinations.ai/prompt/A%20highly%20detailed%20cyberpunk%20sci-fi%20UI%20dashboard%20background%20for%20a%20gaming%20website.%20The%20dashboard%20features%20futuristic%20screens,%20neon%20pink%20and%20cyan%20UI%20elements,%20system%20stats,%20data%20graphs,%20and%20a%20central%20circular%20logo%20placeholder.%20Dark%20metallic%20and%20neon%20lighting.%20Intricate%20details,%20HUD%20elements,%20system%20logs,%20inventory%20screens.?width=1200&height=400&nologo=true"
+            alt="Dashboard Background"
+            style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; opacity: 0.8; filter: contrast(1.1) brightness(0.6);">
+
+        <div
+            style="position: absolute; inset: 0; background: linear-gradient(to right, rgba(10, 11, 16, 0.95) 0%, rgba(10, 11, 16, 0.4) 50%, rgba(10, 11, 16, 0.8) 100%); z-index: 1;">
+        </div>
+
+        <!-- AI GENERATED GLITCH BOT IMAGE -->
+        <div
+            style="position: absolute; right: 80px; bottom: -20px; z-index: 10; animation: floatHUD 6s infinite; filter: drop-shadow(0 0 30px rgba(255, 49, 49, 0.4));">
+            <div class="fbot-speech" id="bot-speech-bubble"
+                style="background: rgba(255, 49, 49, 0.1); backdrop-filter: blur(12px); border: 1px solid rgba(255, 49, 49, 0.4); padding: 10px 18px; border-radius: 20px 20px 0 20px; color: #ff3131; font-size: 0.85rem; font-family: 'Space Grotesk', sans-serif; font-weight: bold; margin-bottom: 10px; text-shadow: 0 0 10px rgba(255, 49, 49, 0.3); text-align: center;">
+                UPLINK ERROR: SWAG.EXE NOT FOUND.<br>READY, {{ user.profile.nickname|default:user.username|upper }}?
+            </div>
+            <img src="https://image.pollinations.ai/prompt/A%20funny,%20clumsy%20version%20of%20the%20obsidian%20black%20gaming%20robot%20with%20red%20LED%20eyes.%20The%20robot%20tries%20to%20look%20intimidating%20in%20its%20dark%20industrial%20hangar,%20but%20its%20head%20suddenly%20tilts%20at%20a%20goofy%20angle%20due%20to%20a%20%27system%20error.%27%20Its%20red%20eyes%20flicker%20into%20pixelated%20%27D:%27%20emoji%20faces.%20One%20of%20its%20mechanical%20ears%20twitches%20uncontrollably,%20and%20it%20lets%20out%20a%20small%20puff%20of%20digital%20smoke%20while%20looking%20confused%20at%20the%20camera.%20Cyberpunk%20aesthetic%20but%20with%20a%20slapstick,%20humorous%20gaming%20vibe?width=300&height=300&nologo=true"
+                alt="Clumsy Glitch Bot"
+                style="width: 250px; height: 250px; border-radius: 20px; object-fit: cover; border: 2px solid rgba(255, 49, 49, 0.3);">
+        </div>
+
+        <div style="position: relative; z-index: 2;">
+            <div class="hud-element" style="top: -20px; left: 0;">USR_SESSION: 0x{{ user.id|add:"1000" }}</div>
+            <div class="hud-element" style="top: -20px; right: 0;">ZONE_LATENCY: 5ms</div>
+            <h1
+                style="font-size: 3.2rem; margin-bottom: 15px; color: #fff; text-shadow: 0 0 20px rgba(0,0,0,0.8); font-family: 'Outfit', sans-serif; font-weight: 700;">
+                Welcome, <span style="color: var(--primary); font-weight: 700; letter-spacing: -1px;">{{
+                    user.email|default:user.username }}</span>
+            </h1>
+            <p
+                style="font-size: 1.1rem; color: #fff; max-width: 500px; margin-bottom: 30px; letter-spacing: 0.5px; line-height: 1.6; text-shadow: 0 0 10px rgba(0,0,0,0.8);">
+                Explore the F ZoN3 multiverse. Level up, track your<br>
+                performance, and become the ultimate champion.
+            </p>
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <a href="#games-section" class="btn pulsate"
+                    style="background: linear-gradient(135deg, #00d2ff, #7000ff); color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 600;">Explore
+                    Arenas</a>
+                <a href="/leaderboard/" class="btn logout-btn"
+                    style="border: none; color: #fff; font-weight: 600; padding: 12px 24px;">Hall of Fame</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="stats-grid">
+        <div class="stat-item stagger-item">
+            <span class="stat-val counter" data-target="{{ total_played }}">0</span>
+            <span class="stat-label">Games Played</span>
+        </div>
+        <div class="stat-item stagger-item">
+            <span class="stat-val counter" data-target="{{ user.profile.total_wins }}">0</span>
+            <span class="stat-label">Total Wins</span>
+        </div>
+        <div class="stat-item stagger-item">
+            <span class="stat-val">#{{ user.profile.get_rank }}</span>
+            <span class="stat-label">World Rank</span>
+        </div>
+        <div class="stat-item stagger-item">
+            <span class="stat-val counter" data-target="{{ user.profile.total_score }}">0</span>
+            <span class="stat-label">Global Rank Points</span>
+        </div>
+    </div>
+</div>
+
+<div class="container" id="games-section">
+    <div class="card-grid">
+        {% for game in games %}
+        <div class="game-card stagger-item">
+            <div class="card-inner">
+                <div class="card-banner">ID: {{ game.id|add:"100" }}</div>
+                {% if game.image %}
+                <img src="{{ game.image.url }}" alt="{{ game.name }}">
+                {% else %}
+                <img src="https://placehold.co/400x200/151821/00f2ff?text={{ game.name|urlencode }}"
+                    alt="{{ game.name }}">
+                {% endif %}
+                <div class="card-content">
+                    <h3 class="card-title">{{ game.name }}</h3>
+                    <p class="card-desc">{{ game.description|default:"Ready for a challenge? Enter the zone and show
+                        your skills." }}</p>
+                    <a href="/{{ game.slug }}/" class="btn btn-primary" style="width: 100%; text-align: center;">Play
+                        Now</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // --- CYBER BACKGROUND ANIMATION SYSTEM ---
+    (function () {
+        const canvas = document.getElementById('cyber-bg-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+
+        let w, h;
+        let particles = [];
+        const particleCount = 80;
+
+        function resize() {
+            w = canvas.width = window.innerWidth;
+            h = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * w;
+                this.y = Math.random() * h;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 2 + 1;
+                this.alpha = Math.random() * 0.5 + 0.1;
+                this.color = Math.random() > 0.5 ? '#00f2ff' : '#7000ff';
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > w || this.y < 0 || this.y > h) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, w, h);
+
+            const isLight = document.body.classList.contains('light-theme');
+
+            // Draw subtle lines between nearby particles
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < 150) {
+                        ctx.globalAlpha = isLight ? (1 - dist / 150) * 0.08 : (1 - dist / 150) * 0.15;
+                        ctx.strokeStyle = isLight ? '#008eb4' : '#00f2ff';
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+
+                particles[i].update();
+                particles[i].draw();
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        // --- DATA GHOSTS IN BANNER ---
+        const banner = document.querySelector('.hero-banner');
+        if (banner) {
+            const dataPool = ["010111", "SYNC_ACTIVE", "LINK_RECOVERED", "NODE_07", "SYS_RUN_88", "CRYPT_OK"];
+            function spawnGhost() {
+                const ghost = document.createElement('div');
+                ghost.className = 'data-ghost';
+                ghost.innerText = dataPool[Math.floor(Math.random() * dataPool.length)];
+                ghost.style.left = Math.random() * 80 + 10 + "%";
+                ghost.style.top = Math.random() * 80 + 10 + "%";
+                banner.appendChild(ghost);
+
+                setTimeout(() => {
+                    ghost.style.opacity = "0.4";
+                    ghost.style.transform = "translateY(-20px)";
+                    ghost.style.transition = "all 2s ease-out";
+                }, 10);
+
+                setTimeout(() => ghost.remove(), 2100);
+            }
+            setInterval(spawnGhost, 800);
+        }
+
+        // --- STAT COUNTER ANIMATION ---
+        function initCounters() {
+            const counters = document.querySelectorAll('.counter');
+            counters.forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-target') || 0);
+                if (isNaN(target) || target === 0) {
+                    counter.innerText = counter.getAttribute('data-target') || 0;
+                    return;
+                }
+                const duration = 1500;
+                const startTime = performance.now();
+
+                const updateCount = (timestamp) => {
+                    const elapsed = timestamp - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const current = Math.floor(progress * target);
+                    counter.innerText = current;
+
+                    if (progress < 1) {
+                        requestAnimationFrame(updateCount);
+                    } else {
+                        counter.innerText = target;
+                    }
+                };
+                requestAnimationFrame(updateCount);
+            });
+        }
+        setTimeout(initCounters, 800);
+
+        // --- 3D TILT EFFECT FOR CARDS ---
+        const cards = document.querySelectorAll('.game-card');
+        cards.forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const rotateX = (y - centerY) / 15;
+                const rotateY = (centerX - x) / 15;
+
+                const inner = card.querySelector('.card-inner');
+                if (inner) {
+                    inner.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                }
+            });
+
+            card.addEventListener('mouseleave', () => {
+                const inner = card.querySelector('.card-inner');
+                if (inner) {
+                    inner.style.transform = `rotateX(0deg) rotateY(0deg)`;
+                }
+            });
+        });
+
+        // --- THEME SYNC FOR HOME PAGE ---
+        function updateHomeTheme(isLight) {
+            const botHeroImage = document.querySelector('img[alt="Dashboard Background"]');
+            if (botHeroImage) {
+                if (isLight) {
+                    botHeroImage.style.filter = "contrast(1.1) brightness(0.9)";
+                    botHeroImage.style.opacity = "0.6";
+                } else {
+                    botHeroImage.style.filter = "contrast(1.1) brightness(0.6)";
+                    botHeroImage.style.opacity = "0.8";
+                }
+            }
+
+            const speech = document.getElementById('bot-speech-bubble');
+            if (speech) {
+                if (isLight) {
+                    speech.style.background = "rgba(0, 242, 255, 0.1)";
+                    speech.style.borderColor = "rgba(0, 242, 255, 0.4)";
+                    speech.style.color = "#00f2ff";
+                    speech.style.textShadow = "0 0 10px rgba(0, 242, 255, 0.3)";
+                    speech.innerHTML = "SYSTEM BRIGHT.<br>READY TO PLAY, {{ user.profile.nickname|default:user.username|upper }}?";
+                } else {
+                    speech.style.background = "rgba(255, 49, 49, 0.1)";
+                    speech.style.borderColor = "rgba(255, 49, 49, 0.4)";
+                    speech.style.color = "#ff3131";
+                    speech.style.textShadow = "0 0 10px rgba(255, 49, 49, 0.3)";
+                    speech.innerHTML = "UPLINK ERROR: SWAG.EXE NOT FOUND.<br>READY, {{ user.profile.nickname|default:user.username|upper }}?";
+                }
+            }
+        }
+
+        if (document.body.classList.contains('light-theme')) {
+            updateHomeTheme(true);
+        }
+
+        window.addEventListener('themeChanged', (e) => {
+            updateHomeTheme(e.detail.isLight);
+        });
+    })();
+</script>
+{% endblock %}

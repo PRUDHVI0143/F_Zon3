@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root { --cyber-primary: #00f0ff; --cyber-secondary: #ff003c; --cyber-accent: #fcee0a; }
+    .game-container h1 { font-family: 'Courier New', monospace !important; color: var(--cyber-primary) !important; text-shadow: 0 0 15px var(--cyber-primary); text-transform: uppercase; letter-spacing: 5px; -webkit-text-fill-color: var(--cyber-primary) !important; background: none !important; }
+    .subtitle { color: var(--cyber-accent); text-shadow: 0 0 5px var(--cyber-accent); font-weight: bold; letter-spacing: 2px; font-family: 'Courier New', monospace; }
+    .hud-panel { background: rgba(0,0,0,0.6) !important; border: 1px solid var(--cyber-primary) !important; box-shadow: inset 0 0 15px rgba(0,240,255,0.2) !important; border-radius: 5px !important; font-family: 'Courier New', monospace; }
+    .hud-label { color: #8892b0 !important; }
+    .hud-value { color: var(--cyber-primary) !important; text-shadow: 0 0 10px var(--cyber-primary) !important; }
+    .game-board-wrapper { background: transparent !important; border: none !important; box-shadow: none !important; }
+    .btn-cyber { background: transparent; color: var(--cyber-primary); border: 1px solid var(--cyber-primary); padding: 12px 24px; font-family: 'Courier New', monospace; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: all 0.3s; box-shadow: 0 0 10px rgba(0,240,255,0.2); }
+    .btn-cyber:hover { background: var(--cyber-primary); color: #000; box-shadow: 0 0 20px var(--cyber-primary); }
+
+    .sudoku-grid { display: grid; grid-template-columns: repeat(9, 55px); grid-template-rows: repeat(9, 55px); border: 2px solid var(--cyber-primary) !important; background: rgba(0,0,0,0.5); box-shadow: 0 0 20px rgba(0,240,255,0.2); }
+    .sudoku-cell { border: 1px solid rgba(0,240,255,0.15); display: flex; align-items: center; justify-content: center; background: transparent; color: #fff; font-size: 1.4rem; font-weight: bold; transition: all 0.2s; cursor: pointer; font-family: 'Courier New', monospace; }
+    .sudoku-cell:hover { background: rgba(0,240,255,0.1); }
+    .sudoku-cell.selected { background: rgba(0,240,255,0.25); border: 2px solid var(--cyber-primary); box-shadow: 0 0 10px rgba(0,240,255,0.3); }
+    .sudoku-cell.fixed { color: #8892b0; }
+    .sudoku-cell.wrong { color: var(--cyber-secondary) !important; text-shadow: 0 0 10px var(--cyber-secondary); }
+    .sudoku-cell:nth-child(3n) { border-right: 2px solid var(--cyber-primary); }
+    .sudoku-cell:nth-child(9n) { border-right: 1px solid rgba(0,240,255,0.15); }
+    .sudoku-cell:nth-child(n+19):nth-child(-n+27), .sudoku-cell:nth-child(n+46):nth-child(-n+54) { border-bottom: 2px solid var(--cyber-primary); }
+    .num-pad { display: flex; gap: 8px; margin-top: 25px; }
+    .num-btn { width: 48px; height: 48px; border-radius: 5px; border: 1px solid var(--cyber-primary); background: transparent; color: var(--cyber-primary); font-size: 1.2rem; cursor: pointer; transition: all 0.3s; font-family: 'Courier New', monospace; }
+    .num-btn:hover { background: var(--cyber-primary); color: #000; transform: scale(1.1); box-shadow: 0 0 15px var(--cyber-primary); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container game-container">
+    <h1>Logic Matrix</h1>
+    <p class="subtitle">ENCRYPTED NUMBER GRID</p>
+
+    <div class="hud-panel">
+        <div class="hud-item"><div class="hud-label">Time Elapsed</div><div class="hud-value" id="timer">00:00</div></div>
+        <div class="hud-item"><div class="hud-label">Mode</div><div class="hud-value" style="font-size: 0.8rem;">ENCRYPTED</div></div>
+    </div>
+
+    <div class="game-board-wrapper">
+        <div class="sudoku-grid" id="sudokuGrid"></div>
+    </div>
+
+    <div class="num-pad">
+        {% for i in "123456789" %}<button class="num-btn" onclick="inputNumber({{i}})">{{i}}</button>{% endfor %}
+        <button class="num-btn" onclick="inputNumber(0)" style="width: auto; padding: 0 15px;">CLR</button>
+    </div>
+
+    <div style="margin-top: 25px; display: flex; gap: 15px;">
+        <button class="btn-cyber" onclick="checkSolution()">VALIDATE</button>
+        <button class="btn-cyber" onclick="newGame()">REGENERATE</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/games/sudoku.js' %}"></script>
+{% endblock %}

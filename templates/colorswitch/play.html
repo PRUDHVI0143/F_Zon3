@@ -1,0 +1,614 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --cyber-primary: #00f0ff;
+        --cyber-secondary: #ff003c;
+        --cyber-accent: #fcee0a;
+        --cyber-lime: #00ff41;
+        --cyber-bg: #050a14;
+    }
+
+    body {
+        background-color: var(--cyber-bg);
+        color: #fff;
+        overflow: hidden;
+        touch-action: none;
+    }
+
+    .game-area h1 {
+        font-family: 'Courier New', monospace !important;
+        color: var(--cyber-primary) !important;
+        text-shadow: 0 0 15px var(--cyber-primary);
+        text-transform: uppercase;
+        letter-spacing: 5px;
+        -webkit-text-fill-color: var(--cyber-primary) !important;
+        background: none !important;
+        margin-bottom: 5px;
+    }
+
+    .subtitle {
+        color: var(--cyber-accent);
+        text-shadow: 0 0 5px var(--cyber-accent);
+        font-weight: bold;
+        letter-spacing: 2px;
+        font-family: 'Courier New', monospace;
+        margin-bottom: 20px;
+    }
+
+    .game-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 400px;
+        height: 600px;
+        margin: 0 auto;
+        border: 2px solid var(--cyber-primary);
+        box-shadow: 0 0 30px rgba(0, 240, 255, 0.2);
+        background: #000;
+        overflow: hidden;
+        border-radius: 8px;
+    }
+
+    #colorCanvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+
+    .hud-overlay {
+        position: absolute;
+        top: 20px;
+        left: 0;
+        width: 100%;
+        display: flex;
+        justify-content: space-around;
+        pointer-events: none;
+        font-family: 'Courier New', monospace;
+    }
+
+    .hud-item {
+        background: rgba(0, 0, 0, 0.6);
+        padding: 5px 15px;
+        border-left: 3px solid var(--cyber-primary);
+    }
+
+    .hud-label {
+        font-size: 10px;
+        color: var(--cyber-primary);
+        text-transform: uppercase;
+    }
+
+    .hud-value {
+        font-size: 20px;
+        font-weight: bold;
+        color: #fff;
+        text-shadow: 0 0 10px var(--cyber-primary);
+    }
+
+    .btn-cyber {
+        background: transparent;
+        color: var(--cyber-primary);
+        border: 1px solid var(--cyber-primary);
+        padding: 12px 24px;
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+    }
+
+    .btn-cyber:hover {
+        background: var(--cyber-primary);
+        color: #000;
+        box-shadow: 0 0 20px var(--cyber-primary);
+    }
+
+    .game-area {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px 0;
+    }
+
+    #start-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        text-align: center;
+    }
+
+    .title-glitch {
+        font-size: 42px;
+        font-family: 'Courier New', monospace;
+        color: #fff;
+        text-transform: uppercase;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px var(--cyber-secondary), -2px -2px var(--cyber-primary);
+    }
+
+    .instruction {
+        color: var(--cyber-primary);
+        font-family: 'Courier New', monospace;
+        margin-bottom: 30px;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container game-area">
+    <h1>Color Pulse</h1>
+    <p class="subtitle">CHROMATIC SURVIVAL</p>
+
+    <div class="game-wrapper">
+        <canvas id="colorCanvas"></canvas>
+
+        <div class="hud-overlay">
+            <div class="hud-item">
+                <div class="hud-label">SYNC SCORE</div>
+                <div class="hud-value" id="current-score">0000</div>
+            </div>
+            <div class="hud-item">
+                <div class="hud-label">MAX DEPTH</div>
+                <div class="hud-value" id="hi-score">0000</div>
+            </div>
+        </div>
+
+        <div id="start-overlay">
+            <div class="title-glitch">COLOR PULSE</div>
+            <div class="instruction">
+                TAP / SPACE TO JUMP<br>
+                BYPASS MATCHING NEON SEGMENTS<br>
+                COLLECT COLOR CORES
+            </div>
+            <div style="display: flex; gap: 15px;">
+                <button id="start-btn" class="btn-cyber">INITIATE BOOT</button>
+                <button id="manual-btn" class="btn-cyber"
+                    style="border-color: var(--cyber-accent); color: var(--cyber-accent);">MANUAL</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        const canvas = document.getElementById('colorCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreVal = document.getElementById('current-score');
+        const hiScoreVal = document.getElementById('hi-score');
+        const startBtn = document.getElementById('start-btn');
+        const manualBtn = document.getElementById('manual-btn');
+        const startOverlay = document.getElementById('start-overlay');
+
+        // Theme Detection
+        function isLightMode() {
+            return document.body.classList.contains('light-theme');
+        }
+
+        // Constants
+        const COLORS = [
+            '#00f0ff', // Cyan
+            '#ff003c', // Red/Magenta
+            '#fcee0a', // Yellow
+            '#00ff41'  // Lime
+        ];
+
+        // Game Variables
+        let gameActive = false;
+        let score = 0;
+        let hiScore = 0;
+        let frame = 0;
+        let camY = 0;
+        let targetCamY = 0;
+
+        window.addEventListener('themeChanged', () => {
+            if (!gameActive) draw(); // Refresh if idle
+        });
+
+        // Player
+        const player = {
+            x: 0,
+            y: 0,
+            radius: 12,
+            colorIdx: 0,
+            vy: 0,
+            gravity: 0.25,
+            jumpPower: -6
+        };
+
+        // Game Arrays
+        let obstacles = [];
+        let items = []; // Stars, Color switchers
+        let particles = [];
+
+        function init() {
+            W = canvas.width;
+            H = canvas.height;
+            player.x = W / 2;
+            player.y = H - 150;
+            player.vy = 0;
+            player.colorIdx = Math.floor(Math.random() * 4);
+
+            obstacles = [];
+            items = [];
+            particles = [];
+            score = 0;
+            camY = 0;
+            targetCamY = 0;
+
+            // Initial set of obstacles
+            spawnObstacle(H - 450);
+            spawnObstacle(H - 850);
+            spawnObstacle(H - 1250);
+
+            gameActive = true;
+            startOverlay.style.display = 'none';
+            update();
+        }
+
+        function spawnObstacle(y) {
+            const type = Math.floor(Math.random() * 3);
+            const obstacle = {
+                y: y,
+                angle: 0,
+                rotationSpeed: (0.02 + Math.random() * 0.02) * (Math.random() > 0.5 ? 1 : -1),
+                type: type, // 0: Circle, 1: Square, 2: Cross
+                radius: 80,
+                thickness: 15
+            };
+            obstacles.push(obstacle);
+
+            // Spawn a star in the middle
+            items.push({
+                type: 'star',
+                y: y,
+                x: W / 2,
+                radius: 15,
+                active: true
+            });
+
+            // Spawn a color switcher above it
+            items.push({
+                type: 'switcher',
+                y: y - 200,
+                x: W / 2,
+                radius: 15,
+                active: true
+            });
+        }
+
+        /* DRAWING HELPER FUNCTIONS */
+
+        function drawCircleObstacle(ob) {
+            for (let i = 0; i < 4; i++) {
+                ctx.beginPath();
+                ctx.strokeStyle = COLORS[i];
+                ctx.lineWidth = ob.thickness;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = COLORS[i];
+                const startAngle = ob.angle + (i * Math.PI / 2);
+                const endAngle = startAngle + (Math.PI / 2);
+                ctx.arc(W / 2, ob.y - camY, ob.radius, startAngle, endAngle);
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function drawSquareObstacle(ob) {
+            ctx.save();
+            ctx.translate(W / 2, ob.y - camY);
+            ctx.rotate(ob.angle);
+            const size = ob.radius * 1.5;
+
+            ctx.lineWidth = ob.thickness;
+            ctx.shadowBlur = 10;
+
+            // Draw 4 segments of the square
+            const pts = [
+                { x: -size / 2, y: -size / 2 },
+                { x: size / 2, y: -size / 2 },
+                { x: size / 2, y: size / 2 },
+                { x: -size / 2, y: size / 2 }
+            ];
+
+            for (let i = 0; i < 4; i++) {
+                ctx.strokeStyle = COLORS[i];
+                ctx.shadowColor = COLORS[i];
+                ctx.beginPath();
+                const p1 = pts[i];
+                const p2 = pts[(i + 1) % 4];
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.stroke();
+            }
+            ctx.restore();
+            ctx.shadowBlur = 0;
+        }
+
+        function drawCrossObstacle(ob) {
+            ctx.save();
+            ctx.translate(W / 2, ob.y - camY);
+            ctx.rotate(ob.angle);
+
+            ctx.lineWidth = ob.thickness;
+            ctx.shadowBlur = 10;
+            const len = ob.radius;
+
+            for (let i = 0; i < 4; i++) {
+                ctx.save();
+                ctx.rotate(i * Math.PI / 2);
+                ctx.strokeStyle = COLORS[i];
+                ctx.shadowColor = COLORS[i];
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, -len);
+                ctx.stroke();
+                ctx.restore();
+            }
+            ctx.restore();
+            ctx.shadowBlur = 0;
+        }
+
+        function drawStar(item) {
+            if (!item.active) return;
+            const isLight = isLightMode();
+            ctx.save();
+            ctx.translate(item.x, item.y - camY);
+            ctx.rotate(frame * 0.05);
+            ctx.fillStyle = isLight ? '#f59e0b' : '#fff';
+            ctx.shadowBlur = isLight ? 0 : 15;
+            ctx.shadowColor = '#fff';
+
+            ctx.beginPath();
+            for (let i = 0; i < 5; i++) {
+                ctx.lineTo(Math.cos((i * 4 * Math.PI) / 5) * item.radius,
+                    Math.sin((i * 4 * Math.PI) / 5) * item.radius);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+            ctx.shadowBlur = 0;
+        }
+
+        function drawSwitcher(item) {
+            if (!item.active) return;
+            ctx.save();
+            ctx.translate(item.x, item.y - camY);
+            ctx.rotate(frame * 0.02);
+
+            for (let i = 0; i < 4; i++) {
+                ctx.fillStyle = COLORS[i];
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.arc(0, 0, item.radius, i * Math.PI / 2, (i + 1) * Math.PI / 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        function createExplosion(x, y, color) {
+            for (let i = 0; i < 12; i++) {
+                particles.push({
+                    x, y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    life: 1.0,
+                    color: color,
+                    size: Math.random() * 4 + 2
+                });
+            }
+        }
+
+        /* GAME LOOP */
+        function update() {
+            if (!gameActive) return;
+            frame++;
+
+            // Physics
+            player.vy += player.gravity;
+            player.y += player.vy;
+
+            // Camera follow
+            if (player.y < camY + H / 2) {
+                targetCamY = player.y - H / 2;
+            }
+            camY += (targetCamY - camY) * 0.1;
+
+            // Game Over - hit bottom
+            if (player.y - camY > H - 20) die();
+
+            // Obstacles check
+            obstacles.forEach(ob => {
+                ob.angle += ob.rotationSpeed;
+
+                // Collision check
+                const dist = Math.abs(player.y - ob.y);
+                if (dist < ob.radius + 10 && dist > ob.radius - 10) {
+                    // Determine current angle of player relative to obstacle center
+                    // Since world is 1D (x is constant center for obstacles), we only check player.y vs obstacle segments
+                    if (ob.type === 0) { // Circle
+                        const pAngle = Math.atan2(player.y - ob.y, 0); // Not perfectly accurate for rotating segments
+                        // Color Switch actually uses a simpler trick: check player color vs segment color at vertical intercept
+
+                        // The segment exactly at the bottom (angle PI/2) or top (angle -PI/2)
+                        let checkAngle = (player.vy < 0) ? -Math.PI / 2 : Math.PI / 2;
+                        let relativeAngle = (checkAngle - ob.angle) % (Math.PI * 2);
+                        if (relativeAngle < 0) relativeAngle += Math.PI * 2;
+
+                        const segmentIdx = Math.floor(relativeAngle / (Math.PI / 2));
+                        if (COLORS[segmentIdx] !== COLORS[player.colorIdx]) die();
+                    } else {
+                        // Geometric collisions are complex in 2D, but Color Switch usually simplifies
+                        // I'll stick to a robust angle-based "What color is at this Y?" check
+                        let checkAngle = (player.vy < 0) ? -Math.PI / 2 : Math.PI / 2;
+                        let relativeAngle = (checkAngle - ob.angle) % (Math.PI * 2);
+                        if (relativeAngle < 0) relativeAngle += Math.PI * 2;
+                        const segmentIdx = Math.floor(relativeAngle / (Math.PI / 2));
+                        if (COLORS[segmentIdx] !== COLORS[player.colorIdx]) die();
+                    }
+                }
+            });
+
+            // Items check
+            items.forEach(item => {
+                if (!item.active) return;
+                const dx = player.x - item.x;
+                const dy = player.y - item.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < player.radius + item.radius) {
+                    item.active = false;
+                    if (item.type === 'star') {
+                        score += 1;
+                        createExplosion(item.x, item.y, '#fff');
+                        if (window.playSound) window.playSound('score');
+                    } else if (item.type === 'switcher') {
+                        player.colorIdx = (player.colorIdx + Math.floor(Math.random() * 3) + 1) % 4;
+                        createExplosion(item.x, item.y, COLORS[player.colorIdx]);
+                        if (window.playSound) window.playSound('click');
+                    }
+                }
+            });
+
+            // Cleanup and Spawn more obstacles
+            if (obstacles.length > 0 && obstacles[0].y - camY > H + 200) {
+                obstacles.shift();
+                // Spawn new one much higher
+                spawnObstacle(obstacles[obstacles.length - 1].y - 400);
+            }
+
+            // Particles
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy; p.life -= 0.02;
+                if (p.life <= 0) particles.splice(i, 1);
+            });
+
+            // HUD
+            scoreVal.innerText = score.toString().padStart(4, '0');
+            hiScoreVal.innerText = hiScore.toString().padStart(4, '0');
+
+            draw();
+            animFrame = requestAnimationFrame(update);
+        }
+
+        function draw() {
+            const isLight = isLightMode();
+            ctx.clearRect(0, 0, W, H);
+
+            // Background grid (Parallax)
+            ctx.strokeStyle = isLight ? 'rgba(0, 0, 0, 0.05)' : 'rgba(0, 240, 255, 0.03)';
+            ctx.lineWidth = 1;
+            const gridOff = (camY * 0.5) % 40;
+            for (let y = -gridOff; y < H; y += 40) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+            }
+            for (let x = 0; x < W; x += 40) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+            }
+
+            // Obstacles
+            obstacles.forEach(ob => {
+                if (ob.type === 0) drawCircleObstacle(ob);
+                else if (ob.type === 1) drawSquareObstacle(ob);
+                else drawCrossObstacle(ob);
+            });
+
+            // Items
+            items.forEach(item => {
+                if (item.type === 'star') drawStar(item);
+                else drawSwitcher(item);
+            });
+
+            // Particles
+            particles.forEach(p => {
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y - camY, p.size, p.size);
+            });
+            ctx.globalAlpha = 1.0;
+
+            // Player
+            ctx.fillStyle = COLORS[player.colorIdx];
+            ctx.shadowBlur = isLight ? 0 : 15;
+            ctx.shadowColor = COLORS[player.colorIdx];
+            ctx.beginPath();
+            ctx.arc(player.x, player.y - camY, player.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            // Pulse effect for player jump
+            if (player.vy < -2) {
+                ctx.strokeStyle = COLORS[player.colorIdx];
+                ctx.lineWidth = 2;
+                ctx.globalAlpha = 0.5;
+                ctx.beginPath();
+                ctx.arc(player.x, player.y - camY, player.radius + 10, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.globalAlpha = 1.0;
+            }
+        }
+
+        function die() {
+            gameActive = false;
+            cancelAnimationFrame(animFrame);
+            createExplosion(player.x, player.y - camY, COLORS[player.colorIdx]);
+            if (window.playSound) window.playSound('damage');
+
+            if (score > hiScore) hiScore = score;
+
+            setTimeout(() => {
+                startOverlay.style.display = 'flex';
+                startOverlay.querySelector('.title-glitch').innerText = 'SYNC LOST';
+                startBtn.innerText = 'RE-INITIALIZE';
+                if (window.submitScore) window.submitScore('colorswitch', score);
+                if (window.showResult) window.showResult('SYNC FAILURE', score, 'loss');
+            }, 500);
+        }
+
+        function jump() {
+            if (gameActive) {
+                player.vy = player.jumpPower;
+                if (window.playSound) window.playSound('click');
+            }
+        }
+
+        // Input handlers
+        window.addEventListener('keydown', e => {
+            if (e.key === ' ') {
+                if (!gameActive) init(); else jump();
+                e.preventDefault();
+            }
+        });
+
+        canvas.addEventListener('mousedown', () => {
+            if (!gameActive) init(); else jump();
+        });
+
+        canvas.addEventListener('touchstart', (e) => {
+            if (!gameActive) init(); else jump();
+            e.preventDefault();
+        }, { passive: false });
+
+        startBtn.addEventListener('click', init);
+
+        // Initial render
+        draw();
+
+    })();
+</script>
+{% endblock %}

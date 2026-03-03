@@ -1,0 +1,389 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    body {
+        margin: 0;
+        font-family: 'Outfit', sans-serif;
+    }
+    
+    .cyber-bg {
+        background: url('/media/games/cyber_sl_bg.png') repeat;
+        background-size: cover;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        z-index: -1;
+        opacity: 0.8;
+    }
+
+    .game-area {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 90vh;
+        padding: 20px;
+        position: relative;
+    }
+
+    /* Modal for Mode Selection */
+    .setup-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.8);
+        backdrop-filter: blur(10px);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .setup-box {
+        background: radial-gradient(circle at center, #2b3040 0%, #151821 100%);
+        padding: 40px;
+        border-radius: 30px;
+        border: 2px solid #00f2ff;
+        box-shadow: 0 0 50px rgba(0, 242, 255, 0.2);
+        max-width: 400px;
+        width: 100%;
+        text-align: center;
+        animation: fadeInUp 0.5s ease;
+    }
+
+    .setup-box h2 {
+        color: #fff;
+        font-size: 2rem;
+        margin-bottom: 20px;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        background: linear-gradient(90deg, #00ff88, #00f2ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .mode-btn {
+        width: 100%;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.2);
+        background: rgba(0,0,0,0.4);
+        color: white;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .mode-btn:hover, .mode-btn.selected {
+        background: rgba(0, 242, 255, 0.2);
+        border-color: #00f2ff;
+        box-shadow: 0 0 15px rgba(0,242,255,0.4);
+    }
+    
+    .player-count-btns {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        opacity: 0.5;
+        pointer-events: none;
+        transition: all 0.3s;
+    }
+    .player-count-btns.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    
+    .pc-btn {
+        flex: 1;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.2);
+        background: rgba(0,0,0,0.4);
+        color: white;
+        font-size: 1.1rem;
+        cursor: pointer;
+    }
+    .pc-btn.selected {
+        background: var(--primary);
+        color: #000;
+        font-weight: bold;
+    }
+
+    .start-game-btn {
+        width: 100%;
+        padding: 15px;
+        border-radius: 15px;
+        background: linear-gradient(90deg, #ff0044, #00f2ff);
+        color: white;
+        font-size: 1.3rem;
+        font-weight: 800;
+        border: none;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: transform 0.2s;
+        margin-top: 10px;
+    }
+    .start-game-btn:disabled {
+        opacity: 0.5; cursor: not-allowed;
+    }
+    .start-game-btn:not(:disabled):hover {
+        transform: scale(1.05);
+    }
+
+    /* Main UI Layout */
+    .game-layout {
+        display: flex;
+        gap: 40px;
+        align-items: flex-end;
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 1s ease;
+    }
+    
+    /* Player turn strip similar to user image */
+    .player-strip {
+        background: rgba(10, 11, 16, 0.8);
+        border: 2px solid #00f2ff;
+        border-radius: 40px;
+        width: 80px;
+        min-height: 400px;
+        box-shadow: inset 0 0 20px rgba(0,0,0,0.4), 0 10px 30px rgba(0,0,0,0.5);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px 0;
+        gap: 20px;
+    }
+
+    .turn-indicator {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 4px solid rgba(255,255,255,0.4);
+        display: flex;
+        align-items: center; justify-content: center;
+        transition: all 0.3s;
+        opacity: 0.4;
+        position: relative;
+    }
+    .turn-indicator.active {
+        opacity: 1;
+        border-color: #fff;
+        transform: scale(1.2);
+        box-shadow: 0 0 15px rgba(255,255,255,0.8);
+    }
+    .ti-label {
+        position: absolute;
+        left: 55px;
+        color: white;
+        background: rgba(0,0,0,0.6);
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    .turn-indicator:hover .ti-label {
+        opacity: 1;
+    }
+    .t-red { background: radial-gradient(circle at 30% 30%, #ff4d79, #b30026); }
+    .t-blue { background: radial-gradient(circle at 30% 30%, #4dd2ff, #0088cc); }
+    .t-green { background: radial-gradient(circle at 30% 30%, #4dffb2, #00994d); }
+    .t-yellow { background: radial-gradient(circle at 30% 30%, #ffe64d, #b39500); }
+
+    /* The Board structure */
+    .board-wrapper {
+        border: 4px solid var(--primary); 
+        border-radius: 12px;
+        box-shadow: 0 0 50px rgba(0, 242, 255, 0.4), inset 0 0 20px rgba(0, 242, 255, 0.2);
+        position: relative;
+        background: #000;
+        width: 600px;
+        height: 600px;
+    }
+
+    .sl-board {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        grid-template-rows: repeat(10, 1fr);
+    }
+
+    .sl-cell {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        padding: 5px;
+        font-size: 1.1rem;
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 700;
+        color: rgba(255,255,255,0.4);
+        border: 1px solid rgba(0, 242, 255, 0.1);
+        position: relative;
+    }
+    .sl-cell.yellow { background: rgba(0, 242, 255, 0.05); }
+    .sl-cell.orange { background: rgba(112, 0, 255, 0.05); }
+    .sl-cell.white { background: transparent; }
+
+    canvas {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        pointer-events: none;
+        z-index: 10;
+        filter: drop-shadow(2px 5px 5px rgba(0,0,0,0.5));
+    }
+
+    /* Moving Pawns (3D Pins) */
+    .pawn {
+        width: 30px;
+        height: 38px;
+        border-radius: 50% 50% 10% 10%;
+        border: 2px solid #000;
+        position: absolute;
+        cursor: pointer;
+        z-index: 50;
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), left 0.4s ease, top 0.4s ease;
+        box-shadow: 0 5px 8px rgba(0,0,0,0.6), inset 0 2px 5px rgba(255,255,255,0.8);
+        bottom: 5px; /* Offset to anchor from bottom */
+        margin-left: -15px;
+        margin-top: -30px;
+    }
+    .pawn::after {
+        content: ''; position: absolute; top: 25%; left: 25%;
+        width: 50%; height: 50%; background: rgba(255,255,255,0.4); border-radius: 50%;
+    }
+    .pawn-red { background: radial-gradient(circle at 30% 30%, #ff4d79, #b30026); }
+    .pawn-blue { background: radial-gradient(circle at 30% 30%, #4dd2ff, #0088cc); }
+    .pawn-green { background: radial-gradient(circle at 30% 30%, #4dffb2, #00994d); }
+    .pawn-yellow { background: radial-gradient(circle at 30% 30%, #ffe64d, #b39500); }
+
+    /* Dice Container exactly like Ludo */
+    .dice-area {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        background: rgba(0,0,0,0.5);
+        padding: 20px;
+        border-radius: 20px;
+        border: 2px solid rgba(255,255,255,0.1);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    /* 3D Dice styling */
+    .dice-container {
+        width: 80px; height: 80px; perspective: 600px; cursor: pointer;
+    }
+    .dice {
+        width: 100%; height: 100%; position: relative;
+        transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .dice.rolling { transition: transform 0.1s linear; }
+    .face {
+        position: absolute; width: 80px; height: 80px; background: white;
+        border: 2px solid #ccc; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+        background-color: #f8f9fa;
+    }
+    /* We match current turn color using JS */
+    .face { border-color: #333; box-shadow: inset 0 0 20px rgba(0,0,0,0.1); }
+    .dot { width: 16px; height: 16px; background: #333; border-radius: 50%; }
+
+    .front  { transform: rotateY(0deg) translateZ(40px); }
+    .back   { transform: rotateY(180deg) translateZ(40px); }
+    .right  { transform: rotateY(90deg) translateZ(40px); }
+    .left   { transform: rotateY(-90deg) translateZ(40px); }
+    .top    { transform: rotateX(90deg) translateZ(40px); }
+    .bottom { transform: rotateX(-90deg) translateZ(40px); }
+
+    /* Standard dot layouts */
+    .front { display: flex; justify-content: center; align-items: center; }
+    .back { flex-direction: column; justify-content: space-around; align-items: center; padding: 10px;}
+    .back .dot:nth-child(1) { align-self: flex-start; }
+    .back .dot:nth-child(2) { align-self: flex-end; }
+    .right { flex-direction: column; justify-content: space-between; align-items: center; padding: 10px;}
+    .right .dot:nth-child(1) { align-self: flex-start; }
+    .right .dot:nth-child(3) { align-self: flex-end; }
+    .left { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 10px; padding: 15px;}
+    .top { display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; padding: 10px;}
+    .top .dot:nth-child(1) { grid-column: 1; grid-row: 1; }
+    .top .dot:nth-child(2) { grid-column: 3; grid-row: 1; }
+    .top .dot:nth-child(3) { grid-column: 2; grid-row: 2; }
+    .top .dot:nth-child(4) { grid-column: 1; grid-row: 3; }
+    .top .dot:nth-child(5) { grid-column: 3; grid-row: 3; }
+    .bottom { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr 1fr; gap: 10px; padding: 15px;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cyber-bg"></div>
+
+<!-- Setup Modal -->
+<div class="setup-modal" id="setupModal">
+    <div class="setup-box">
+        <h2>Game Setup</h2>
+        <div style="margin-bottom: 20px; text-align: left;">
+            <label style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase;">Select Mode:</label>
+        </div>
+        <button class="mode-btn selected" id="btn-mode-ai" onclick="selectMode('ai')">
+            <i class="fa-solid fa-robot" style="margin-right: 10px;"></i> Player vs Computer
+        </button>
+        <button class="mode-btn" id="btn-mode-local" onclick="selectMode('local')">
+            <i class="fa-solid fa-users" style="margin-right: 10px;"></i> Local Multiplayer
+        </button>
+
+        <div class="player-count-btns" id="pc-group">
+            <button class="pc-btn selected" onclick="selectPlayers(2)" id="pc-2">2P</button>
+            <button class="pc-btn" onclick="selectPlayers(3)" id="pc-3">3P</button>
+            <button class="pc-btn" onclick="selectPlayers(4)" id="pc-4">4P</button>
+        </div>
+
+        <button class="start-game-btn" onclick="startGame()">Start Game</button>
+    </div>
+</div>
+
+<div class="game-area">
+    <div class="game-layout" id="gameLayout">
+        
+        <!-- Player Strip mimicking left panel in user image -->
+        <div class="player-strip" id="turnStrokes">
+            <!-- Will be injected via JS based on player count -->
+        </div>
+
+        <!-- The Main Board -->
+        <div class="board-wrapper" id="boardWrapper">
+            <!-- Board grid generated via JS -->
+            <div class="sl-board" id="board"></div>
+            <!-- Canvas perfectly overlaying the grid for snakes/ladders -->
+            <canvas id="slCanvas" width="600" height="600"></canvas>
+        </div>
+
+        <!-- Dice Controller Container -->
+        <div class="dice-area" id="dicePanel">
+            <!-- Dynamic dice -->
+            <div class="dice-container" onclick="rollSnakesDice()">
+                <div class="dice" id="mainDice">
+                    <div class="face front"><div class="dot"></div></div>
+                    <div class="face back"><div class="dot"></div><div class="dot"></div></div>
+                    <div class="face right"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+                    <div class="face left"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+                    <div class="face top"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+                    <div class="face bottom"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+                </div>
+            </div>
+            <div style="font-weight: 800; font-size: 1.2rem; margin-top: 10px; color: white; border-radius: 8px; border: 1px solid rgba(255,255,255,0.4); padding: 5px 15px;" id="statusNotice">
+                YOUR TURN
+            </div>
+            <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 10px; font-size: 0.8rem; border-radius: 10px;">Quit Match</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/games/snakeladder.js' %}"></script>
+{% endblock %}

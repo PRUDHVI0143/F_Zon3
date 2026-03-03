@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root { --cyber-primary: #00f0ff; --cyber-secondary: #ff003c; --cyber-accent: #fcee0a; }
+    .game-container h1 { font-family: 'Courier New', monospace !important; color: var(--cyber-primary) !important; text-shadow: 0 0 15px var(--cyber-primary); text-transform: uppercase; letter-spacing: 5px; -webkit-text-fill-color: var(--cyber-primary) !important; background: none !important; }
+    .subtitle { color: var(--cyber-accent); text-shadow: 0 0 5px var(--cyber-accent); font-weight: bold; letter-spacing: 2px; font-family: 'Courier New', monospace; }
+    .hud-panel { background: rgba(0,0,0,0.6) !important; border: 1px solid var(--cyber-primary) !important; box-shadow: inset 0 0 15px rgba(0,240,255,0.2) !important; border-radius: 5px !important; font-family: 'Courier New', monospace; }
+    .hud-label { color: #8892b0 !important; }
+    .hud-value { color: var(--cyber-primary) !important; text-shadow: 0 0 10px var(--cyber-primary) !important; }
+    .btn-cyber { background: transparent; color: var(--cyber-primary); border: 1px solid var(--cyber-primary); padding: 12px 24px; font-family: 'Courier New', monospace; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: all 0.3s; box-shadow: 0 0 10px rgba(0,240,255,0.2); }
+    .btn-cyber:hover { background: var(--cyber-primary); color: #000; box-shadow: 0 0 20px var(--cyber-primary); }
+
+    .target-container {
+        width: 800px; height: 500px;
+        background: radial-gradient(circle, #0d1520, #060a14) !important;
+        border: 2px solid var(--cyber-primary) !important;
+        position: relative; cursor: crosshair; overflow: hidden;
+        border-radius: 5px !important;
+        box-shadow: 0 0 30px rgba(0,240,255,0.2);
+    }
+    .target-container::before {
+        content: ''; position: absolute; inset: 0;
+        background: linear-gradient(rgba(0,240,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,240,255,0.03) 1px, transparent 1px);
+        background-size: 40px 40px; pointer-events: none;
+    }
+    .target-dot {
+        width: 40px; height: 40px;
+        background: var(--cyber-secondary); border: 2px solid #fff;
+        border-radius: 50%; position: absolute; cursor: pointer;
+        box-shadow: 0 0 20px var(--cyber-secondary), inset 0 0 10px rgba(255,255,255,0.3);
+        animation: targetPulse 0.3s ease-out;
+    }
+    @keyframes targetPulse { from { transform: scale(0); } to { transform: scale(1); } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container game-container">
+    <h1>Precision Sync</h1>
+    <p class="subtitle">TARGET ACQUISITION TRAINING</p>
+
+    <div class="hud-panel">
+        <div class="hud-item"><div class="hud-label">Uptime</div><div class="hud-value" id="timer-val">30</div></div>
+        <div class="hud-item"><div class="hud-label">Hits</div><div class="hud-value" id="score-val">0</div></div>
+        <div class="hud-item"><div class="hud-label">Accuracy</div><div class="hud-value" id="acc-val">100%</div></div>
+        <div class="hud-item"><div class="hud-label">Misses</div><div class="hud-value" id="miss-count" style="color: var(--cyber-secondary) !important;">0</div></div>
+    </div>
+
+    <div class="target-container" id="targetContainer"></div>
+
+    <div style="margin-top: 30px; display: flex; gap: 15px;">
+        <button class="btn-cyber" onclick="startGame()">INITIATE SEQUENCE</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/games/aimtrainer.js' %}"></script>
+{% endblock %}

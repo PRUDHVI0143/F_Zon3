@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<style>
+    .analytics-hero {
+        position: relative;
+        padding: 80px 0 40px 0;
+        min-height: 40vh;
+        display: flex;
+        align-items: center;
+        text-align: center;
+        overflow: hidden;
+        border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+        margin-bottom: 40px;
+    }
+
+    .analytics-bg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        z-index: 0;
+        opacity: 0.3;
+        filter: contrast(1.2) brightness(0.8);
+    }
+
+    .analytics-content {
+        position: relative;
+        z-index: 2;
+        width: 100%;
+    }
+
+    .chart-card {
+        background: rgba(21, 24, 33, 0.8);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(0, 242, 255, 0.1);
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    }
+
+    body.light-theme .chart-card {
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+    }
+
+    .bar {
+        transition: all 0.3s ease;
+    }
+
+    .bar:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 0 20px var(--primary-glow);
+        background: var(--accent) !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="analytics-hero">
+    <img src="https://image.pollinations.ai/prompt/A%20futuristic%20holographic%20data%20center%20with%20glowing%20cyan%20and%20magenta%20graphs,%20floating%20numbers,%20and%20intricate%20cyberpunk%20UI%20elements.%20Abstract,%20high-tech,%20big%20data%20visualization,%208k%20resolution?width=1200&height=400&nologo=true"
+        class="analytics-bg" alt="Data Background">
+    <div class="analytics-content container">
+        <h1
+            style="font-size: 3.5rem; color: var(--text-main); text-shadow: 0 0 20px rgba(0,242,255,0.4); margin-bottom: 10px; font-weight: 800;">
+            GLOBAL INTEL</h1>
+        <p style="font-size: 1.2rem; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase;">
+            Real-time F ZoN3 telemetrics & engagement</p>
+    </div>
+</section>
+
+<div class="container" style="margin-bottom: 60px;">
+    <div class="stats-grid">
+        <div class="stat-item">
+            <span class="stat-val">{{ total_games_all }}</span>
+            <span class="stat-label">Total Matches Played</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-val" style="font-size: 1.2rem;">{{ most_played_game|default:"None" }}</span>
+            <span class="stat-label">Most Popular Game</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-val" style="font-size: 1.2rem;">{{ top_user|default:"None" }}</span>
+            <span class="stat-label">Top Contributor</span>
+        </div>
+    </div>
+
+    <div class="chart-card" style="margin-top: 40px;">
+        <h2
+            style="margin-bottom: 40px; color: var(--primary); text-transform: uppercase; letter-spacing: 2px; text-align: center;">
+            Session Distribution Matrix</h2>
+
+        <div id="chart-container"
+            style="height: 300px; display: flex; align-items: flex-end; gap: 10px; padding-bottom: 20px; border-bottom: 1px solid rgba(0,242,255,0.2);">
+            {% for count in chart_data %}
+            <div class="bar"
+                style="height: calc({{ count }} * 10px + 20px); max-height: 100%; background: linear-gradient(to top, var(--primary), var(--secondary)); flex: 1; border-radius: 8px 8px 0 0; position: relative;">
+                <span
+                    style="position: absolute; top: -30px; left: 50%; transform: translateX(-50%); font-size: 1rem; font-weight: bold; color: var(--text-main);">{{
+                    count }}</span>
+            </div>
+            {% empty %}
+            <p style="width: 100%; text-align: center; color: var(--text-muted);">No telemetry data available.</p>
+            {% endfor %}
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            {% for label in chart_labels %}
+            <div
+                style="flex: 1; text-align: center; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">
+                {{ label }}</div>
+            {% empty %}
+            <div style="flex: 1;"></div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

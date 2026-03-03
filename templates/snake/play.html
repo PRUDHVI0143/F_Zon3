@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --cyber-bg: #0b0f19;
+        --cyber-primary: #00f0ff;
+        --cyber-secondary: #ff003c;
+        --cyber-accent: #fcee0a;
+        --cyber-green: #00ff88;
+    }
+
+    .game-container h1 {
+        font-family: 'Courier New', Courier, monospace !important;
+        color: var(--cyber-primary) !important;
+        text-shadow: 0 0 15px var(--cyber-primary);
+        text-transform: uppercase;
+        letter-spacing: 5px;
+        -webkit-text-fill-color: var(--cyber-primary) !important;
+        background: none !important;
+        margin-bottom: 5px;
+    }
+    .subtitle {
+        color: var(--cyber-accent);
+        text-shadow: 0 0 5px var(--cyber-accent);
+        font-weight: bold;
+        letter-spacing: 2px;
+        font-family: 'Courier New', Courier, monospace;
+        margin-bottom: 15px;
+    }
+
+    .hud-panel {
+        background: rgba(0, 0, 0, 0.6) !important;
+        border: 1px solid var(--cyber-primary) !important;
+        box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.2) !important;
+        border-radius: 5px !important;
+        font-family: 'Courier New', Courier, monospace;
+        padding: 15px 40px;
+        position: relative;
+    }
+    .hud-panel::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 2px;
+        background: linear-gradient(90deg, transparent, var(--cyber-primary), transparent);
+    }
+    .hud-label { color: #8892b0 !important; font-size: 0.9rem; text-transform: uppercase; }
+    .hud-value { color: var(--cyber-primary) !important; text-shadow: 0 0 10px var(--cyber-primary) !important; }
+
+    .game-board-wrapper {
+        position: relative;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+
+    canvas {
+        border: 2px solid var(--cyber-primary) !important;
+        box-shadow: 0 0 40px rgba(0, 240, 255, 0.2) !important;
+        background: #060a14 !important;
+        border-radius: 5px !important;
+    }
+
+    .btn-cyber {
+        background: transparent;
+        color: var(--cyber-primary);
+        border: 1px solid var(--cyber-primary);
+        padding: 12px 24px;
+        font-family: 'Courier New', Courier, monospace;
+        font-weight: bold;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+        font-size: 1rem;
+    }
+    .btn-cyber:hover {
+        background: var(--cyber-primary);
+        color: #000;
+        box-shadow: 0 0 20px var(--cyber-primary);
+    }
+
+    /* Mobile Controls */
+    .mobile-controls {
+        display: none;
+        gap: 5px;
+        margin-top: 15px;
+    }
+    @media (max-width: 768px) {
+        .mobile-controls { display: grid; }
+    }
+    .mobile-controls {
+        grid-template-columns: 60px 60px 60px;
+        grid-template-rows: 60px 60px;
+        justify-content: center;
+    }
+    .ctrl-btn {
+        width: 60px;
+        height: 60px;
+        background: rgba(0, 240, 255, 0.1);
+        border: 1px solid var(--cyber-primary);
+        color: var(--cyber-primary);
+        font-size: 1.5rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 5px;
+    }
+    .ctrl-btn:active {
+        background: var(--cyber-primary);
+        color: #000;
+    }
+    #ctrl-up { grid-column: 2; grid-row: 1; }
+    #ctrl-left { grid-column: 1; grid-row: 2; }
+    #ctrl-down { grid-column: 2; grid-row: 2; }
+    #ctrl-right { grid-column: 3; grid-row: 2; }
+
+    .speed-selector {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        font-family: 'Courier New', Courier, monospace;
+        color: #8892b0;
+        margin-top: 10px;
+    }
+    .speed-btn {
+        padding: 5px 12px;
+        background: transparent;
+        border: 1px solid #333;
+        color: #8892b0;
+        font-family: 'Courier New', Courier, monospace;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .speed-btn.active {
+        border-color: var(--cyber-primary);
+        color: var(--cyber-primary);
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="game-container">
+        <h1>Snake Protocol</h1>
+        <p class="subtitle">NEURAL WORM SIMULATION</p>
+
+        <div class="hud-panel">
+            <div class="hud-item">
+                <div class="hud-label">Data Consumed</div>
+                <div class="hud-value" id="current-score">0</div>
+            </div>
+            <div class="hud-item">
+                <div class="hud-label">Length</div>
+                <div class="hud-value" id="snake-length">3</div>
+            </div>
+            <div class="hud-item">
+                <div class="hud-label">Speed</div>
+                <div class="hud-value" id="speed-display">NORMAL</div>
+            </div>
+        </div>
+
+        <div class="speed-selector">
+            <span>CLOCK:</span>
+            <button class="speed-btn" data-speed="120" onclick="setSpeed(120, this)">SLOW</button>
+            <button class="speed-btn active" data-speed="80" onclick="setSpeed(80, this)">NORMAL</button>
+            <button class="speed-btn" data-speed="50" onclick="setSpeed(50, this)">FAST</button>
+            <button class="speed-btn" data-speed="30" onclick="setSpeed(30, this)">INSANE</button>
+        </div>
+
+        <div class="game-board-wrapper">
+            <canvas id="gameCanvas" width="500" height="500"></canvas>
+        </div>
+
+        <!-- Mobile Touch Controls -->
+        <div class="mobile-controls">
+            <button class="ctrl-btn" id="ctrl-up" onclick="mobileDir(0,-1)">▲</button>
+            <button class="ctrl-btn" id="ctrl-left" onclick="mobileDir(-1,0)">◀</button>
+            <button class="ctrl-btn" id="ctrl-down" onclick="mobileDir(0,1)">▼</button>
+            <button class="ctrl-btn" id="ctrl-right" onclick="mobileDir(1,0)">▶</button>
+        </div>
+
+        <div style="display: flex; gap: 15px; margin-top: 20px;">
+            <button id="start-btn" class="btn-cyber">ENGAGE WORM</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/games/snake.js' %}"></script>
+{% endblock %}

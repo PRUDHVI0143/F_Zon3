@@ -1,0 +1,484 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --cyber-primary: #00f0ff;
+        --cyber-secondary: #ff003c;
+        --cyber-accent: #fcee0a;
+        --cyber-bg: #050a14;
+    }
+
+    body {
+        background-color: var(--cyber-bg);
+        color: #fff;
+        overflow: hidden;
+    }
+
+    .game-area h1 {
+        font-family: 'Courier New', monospace !important;
+        color: var(--cyber-primary) !important;
+        text-shadow: 0 0 15px var(--cyber-primary);
+        text-transform: uppercase;
+        letter-spacing: 5px;
+        -webkit-text-fill-color: var(--cyber-primary) !important;
+        background: none !important;
+        margin-bottom: 5px;
+    }
+
+    .subtitle {
+        color: var(--cyber-accent);
+        text-shadow: 0 0 5px var(--cyber-accent);
+        font-weight: bold;
+        letter-spacing: 2px;
+        font-family: 'Courier New', monospace;
+        margin-bottom: 20px;
+    }
+
+    .game-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background: rgba(0, 0, 0, 0.4);
+        border: 2px solid var(--cyber-primary);
+        box-shadow: 0 0 30px rgba(0, 240, 255, 0.2);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    /* Grid Layout */
+    .node-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        perspective: 1000px;
+    }
+
+    .hole-node {
+        position: relative;
+        aspect-ratio: 1/1;
+        background: rgba(0, 240, 255, 0.05);
+        border: 1px solid rgba(0, 240, 255, 0.2);
+        border-radius: 10px;
+        overflow: hidden;
+        cursor: crosshair;
+        background-image:
+            linear-gradient(rgba(0, 240, 255, 0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 240, 255, 0.1) 1px, transparent 1px);
+        background-size: 15px 15px;
+    }
+
+    .hole-node::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+        pointer-events: none;
+    }
+
+    /* The "Mole" - Malware Node */
+    .malware {
+        position: absolute;
+        width: 70%;
+        height: 70%;
+        top: 100%;
+        left: 15%;
+        background: var(--cyber-primary);
+        border-radius: 15%;
+        transition: top 0.1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 20px var(--cyber-primary);
+    }
+
+    /* Different Malware Types */
+    .malware.up {
+        top: 15%;
+    }
+
+    .malware.standard {
+        background: var(--cyber-primary);
+        box-shadow: 0 0 20px var(--cyber-primary);
+    }
+
+    .malware.decoy {
+        background: var(--cyber-secondary);
+        box-shadow: 0 0 20px var(--cyber-secondary);
+    }
+
+    .malware.critical {
+        background: var(--cyber-accent);
+        box-shadow: 0 0 20px var(--cyber-accent);
+    }
+
+    .malware-icon {
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+        font-size: 24px;
+        color: #000;
+        pointer-events: none;
+        user-select: none;
+    }
+
+    .malware.standard .malware-icon::after {
+        content: '01';
+    }
+
+    .malware.decoy .malware-icon::after {
+        content: '!!';
+    }
+
+    .malware.critical .malware-icon::after {
+        content: '$$';
+    }
+
+    /* HUD Styling */
+    .hud-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        font-family: 'Courier New', monospace;
+    }
+
+    .hud-stat {
+        background: rgba(0, 0, 0, 0.6);
+        padding: 5px 15px;
+        border-left: 3px solid var(--cyber-primary);
+    }
+
+    .hud-label {
+        font-size: 10px;
+        color: var(--cyber-primary);
+        text-transform: uppercase;
+    }
+
+    .hud-value {
+        font-size: 20px;
+        color: #fff;
+        text-shadow: 0 0 10px var(--cyber-primary);
+    }
+
+    .btn-cyber {
+        background: transparent;
+        color: var(--cyber-primary);
+        border: 1px solid var(--cyber-primary);
+        padding: 12px 24px;
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+    }
+
+    .btn-cyber:hover {
+        background: var(--cyber-primary);
+        color: #000;
+        box-shadow: 0 0 20px var(--cyber-primary);
+    }
+
+    .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.85);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        text-align: center;
+    }
+
+    .scanline {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: rgba(0, 240, 255, 0.1);
+        z-index: 10;
+        pointer-events: none;
+        animation: scan 4s linear infinite;
+    }
+
+    @keyframes scan {
+        0% {
+            top: 0;
+        }
+
+        100% {
+            top: 100%;
+        }
+    }
+
+    .particles-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 50;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container game-area" style="display: flex; flex-direction: column; align-items: center; padding: 40px 0;">
+    <h1>Neon Purge</h1>
+    <p class="subtitle">ENTITY DISRUPTION PROTOCOL</p>
+
+    <div class="game-wrapper">
+        <div class="scanline"></div>
+        <div id="particles" class="particles-container"></div>
+
+        <div class="hud-header">
+            <div class="hud-stat">
+                <div class="hud-label">UPLINK TIME</div>
+                <div class="hud-value" id="timer">30S</div>
+            </div>
+            <div class="hud-stat">
+                <div class="hud-label">PURGED DATA</div>
+                <div class="hud-value" id="current-score">0000</div>
+            </div>
+        </div>
+
+        <div class="node-grid">
+            {% for i in "123456789" %}
+            <div class="hole-node" data-index="{{ forloop.counter0 }}">
+                <div class="malware">
+                    <div class="malware-icon"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div id="start-overlay" class="overlay">
+            <h2 id="overlay-msg"
+                style="color: #fff; font-family: 'Courier New', monospace; letter-spacing: 5px; margin-bottom: 20px;">
+                SYSTEM READY</h2>
+            <div id="overlay-details"
+                style="color: var(--cyber-primary); margin-bottom: 30px; font-family: 'Courier New', monospace; font-size: 14px;">
+                SELECT DISRUPTION FIDELITY<br>
+                CYAN: +10 / RED: PENALTY / YELLOW: +50
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+                <button onclick="initGame('easy')" class="btn-cyber"
+                    style="border-color: var(--cyber-lime); color: var(--cyber-lime);">EASY</button>
+                <button onclick="initGame('normal')" class="btn-cyber"
+                    style="border-color: var(--cyber-primary); color: var(--cyber-primary);">NORMAL</button>
+                <button onclick="initGame('hard')" class="btn-cyber"
+                    style="border-color: var(--cyber-secondary); color: var(--cyber-secondary);">HARD</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        const holes = document.querySelectorAll('.hole-node');
+        const timerVal = document.getElementById('timer');
+        const scoreVal = document.getElementById('current-score');
+        const startOverlay = document.getElementById('start-overlay');
+        const particlesContainer = document.getElementById('particles');
+
+        let score = 0;
+        let timeRemaining = 30;
+        let gameActive = false;
+        let lastHole = -1;
+        let gameTimer;
+        let spawnTimer;
+        let config = {
+            stayTime: 800,
+            spawnMin: 400,
+            spawnMax: 1200,
+            penalty: -20,
+            level: 'normal'
+        };
+
+        window.initGame = (difficulty) => {
+            score = 0;
+            config.level = difficulty;
+
+            switch (difficulty) {
+                case 'easy':
+                    timeRemaining = 45;
+                    config.stayTime = 1200;
+                    config.spawnMin = 800;
+                    config.spawnMax = 1500;
+                    config.penalty = -5;
+                    break;
+                case 'normal':
+                    timeRemaining = 30;
+                    config.stayTime = 800;
+                    config.spawnMin = 400;
+                    config.spawnMax = 1200;
+                    config.penalty = -20;
+                    break;
+                case 'hard':
+                    timeRemaining = 20;
+                    config.stayTime = 500;
+                    config.spawnMin = 200;
+                    config.spawnMax = 600;
+                    config.penalty = -50;
+                    break;
+            }
+
+            scoreVal.innerText = '0000';
+            timerVal.innerText = timeRemaining + 'S';
+            gameActive = true;
+            startOverlay.style.display = 'none';
+
+            if (window.playSound) window.playSound('click');
+
+            startTimer();
+            peep();
+        };
+
+        function startTimer() {
+            gameTimer = setInterval(() => {
+                timeRemaining--;
+                timerVal.innerText = timeRemaining + 'S';
+
+                if (timeRemaining <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function randomHole() {
+            const idx = Math.floor(Math.random() * holes.length);
+            if (idx === lastHole) return randomHole();
+            lastHole = idx;
+            return holes[idx];
+        }
+
+        function peep() {
+            if (!gameActive) return;
+
+            const hole = randomHole();
+            const malware = hole.querySelector('.malware');
+
+            // Randomize malware type
+            const rand = Math.random();
+            let type = 'standard';
+            let stayTime = config.stayTime - (score * 5); // Faster as score increases
+            stayTime = Math.max(stayTime, config.stayTime * 0.5);
+
+            if (rand > 0.85) {
+                type = 'critical'; // Yellow - high points
+                stayTime *= 0.6;
+            } else if (rand > 0.65) {
+                type = 'decoy'; // Red - penalty
+            }
+
+            malware.className = `malware up ${type}`;
+
+            const nextSpawn = Math.random() * (config.spawnMax - config.spawnMin) + config.spawnMin;
+
+            spawnTimer = setTimeout(() => {
+                malware.classList.remove('up');
+                if (gameActive) peep();
+            }, stayTime);
+        }
+
+        function createParticles(x, y, color) {
+            for (let i = 0; i < 10; i++) {
+                const p = document.createElement('div');
+                p.style.position = 'absolute';
+                p.style.left = x + 'px';
+                p.style.top = y + 'px';
+                p.style.width = '4px';
+                p.style.height = '4px';
+                p.style.background = color;
+                p.style.boxShadow = `0 0 5px ${color}`;
+                p.style.pointerEvents = 'none';
+                particlesContainer.appendChild(p);
+
+                const vx = (Math.random() - 0.5) * 10;
+                const vy = (Math.random() - 0.5) * 10;
+                let opacity = 1.0;
+
+                const anim = setInterval(() => {
+                    const curL = parseFloat(p.style.left);
+                    const curT = parseFloat(p.style.top);
+                    p.style.left = (curL + vx) + 'px';
+                    p.style.top = (curT + vy) + 'px';
+                    opacity -= 0.05;
+                    p.style.opacity = opacity;
+                    if (opacity <= 0) {
+                        clearInterval(anim);
+                        p.remove();
+                    }
+                }, 30);
+            }
+        }
+
+        holes.forEach(hole => {
+            hole.addEventListener('click', (e) => {
+                if (!gameActive) return;
+                const malware = hole.querySelector('.malware');
+
+                if (malware.classList.contains('up')) {
+                    const rect = hole.getBoundingClientRect();
+                    const containerRect = particlesContainer.getBoundingClientRect();
+                    const clickX = e.clientX - containerRect.left;
+                    const clickY = e.clientY - containerRect.top;
+
+                    let points = 0;
+                    let color = '#00f0ff';
+
+                    if (malware.classList.contains('standard')) {
+                        points = 10;
+                        color = '#00f0ff';
+                        if (window.playSound) window.playSound('click');
+                    } else if (malware.classList.contains('critical')) {
+                        points = 50;
+                        color = '#fcee0a';
+                        if (window.playSound) window.playSound('score');
+                    } else if (malware.classList.contains('decoy')) {
+                        points = config.penalty;
+                        color = '#ff003c';
+                        if (window.playSound) window.playSound('damage');
+                    }
+
+                    score += points;
+                    scoreVal.innerText = score.toString().padStart(4, '0');
+                    malware.classList.remove('up');
+                    createParticles(clickX, clickY, color);
+                }
+            });
+        });
+
+        function endGame() {
+            gameActive = false;
+            clearInterval(gameTimer);
+            clearTimeout(spawnTimer);
+
+            // Clear all nodes
+            document.querySelectorAll('.malware').forEach(m => m.classList.remove('up'));
+
+            startOverlay.style.display = 'flex';
+            document.getElementById('overlay-msg').innerText = 'PURGE COMPLETE';
+            document.getElementById('overlay-details').innerText = `TOTAL DATA RECOVERED: ${score}\nUPLINK TERMINATED (LVL: ${config.level.toUpperCase()})`;
+
+            if (window.playSound) window.playSound('win');
+            if (window.showResult) window.showResult('UPLINK SUCCESS', score, 'win');
+            if (window.submitScore) window.submitScore('whackamole', score);
+        }
+
+    })();
+</script>
+{% endblock %}

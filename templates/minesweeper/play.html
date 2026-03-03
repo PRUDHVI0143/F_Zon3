@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root { --cyber-primary: #00f0ff; --cyber-secondary: #ff003c; --cyber-accent: #fcee0a; }
+    .game-container h1 { font-family: 'Courier New', monospace !important; color: var(--cyber-primary) !important; text-shadow: 0 0 15px var(--cyber-primary); text-transform: uppercase; letter-spacing: 5px; -webkit-text-fill-color: var(--cyber-primary) !important; background: none !important; }
+    .subtitle { color: var(--cyber-accent); text-shadow: 0 0 5px var(--cyber-accent); font-weight: bold; letter-spacing: 2px; font-family: 'Courier New', monospace; }
+    .hud-panel { background: rgba(0,0,0,0.6) !important; border: 1px solid var(--cyber-primary) !important; box-shadow: inset 0 0 15px rgba(0,240,255,0.2) !important; border-radius: 5px !important; font-family: 'Courier New', monospace; }
+    .hud-label { color: #8892b0 !important; }
+    .hud-value { color: var(--cyber-primary) !important; text-shadow: 0 0 10px var(--cyber-primary) !important; }
+    .game-board-wrapper { background: transparent !important; border: none !important; box-shadow: none !important; }
+    .btn-cyber { background: transparent; color: var(--cyber-primary); border: 1px solid var(--cyber-primary); padding: 12px 24px; font-family: 'Courier New', monospace; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: all 0.3s; box-shadow: 0 0 10px rgba(0,240,255,0.2); }
+    .btn-cyber:hover { background: var(--cyber-primary); color: #000; box-shadow: 0 0 20px var(--cyber-primary); }
+
+    .grid-mines { display: grid; grid-template-columns: repeat(10, 40px); grid-template-rows: repeat(10, 40px); background: rgba(0,0,0,0.5); border: 2px solid var(--cyber-primary) !important; box-shadow: 0 0 20px rgba(0,240,255,0.2); }
+    .mine-cell { border: 1px solid rgba(0,240,255,0.15) !important; display: flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; background: #0d1520 !important; font-family: 'Courier New', monospace; transition: all 0.1s; }
+    .mine-cell:hover { background: rgba(0,240,255,0.1) !important; }
+    .mine-cell.revealed { background: rgba(0,0,0,0.3) !important; cursor: default; color: var(--cyber-primary); }
+    .mine-cell.bomb { background: var(--cyber-secondary) !important; box-shadow: 0 0 10px var(--cyber-secondary); }
+    .mine-cell.flagged { background: var(--cyber-accent) !important; color: #000; box-shadow: 0 0 10px var(--cyber-accent); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container game-container">
+    <h1>Tactical Sweeper</h1>
+    <p class="subtitle">MINE DETECTION PROTOCOL</p>
+
+    <div class="hud-panel">
+        <div class="hud-item"><div class="hud-label">Mines</div><div class="hud-value" id="mine-count" style="color: var(--cyber-secondary) !important;">10</div></div>
+        <div class="hud-item"><div class="hud-label">Protocol</div><div class="hud-value" style="font-size: 0.8rem;">DEFENSE</div></div>
+    </div>
+
+    <div class="game-board-wrapper">
+        <div class="grid-mines" id="gridMines"></div>
+    </div>
+
+    <div style="margin-top: 30px; display: flex; gap: 15px;">
+        <button class="btn-cyber" onclick="resetGame()">RESTRUCTURE</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/games/minesweeper.js' %}"></script>
+{% endblock %}

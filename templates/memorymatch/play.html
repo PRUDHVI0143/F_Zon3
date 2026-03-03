@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root { --cyber-primary: #00f0ff; --cyber-secondary: #ff003c; --cyber-accent: #fcee0a; }
+    .game-area h1 { font-family: 'Courier New', monospace !important; color: var(--cyber-primary) !important; text-shadow: 0 0 15px var(--cyber-primary); text-transform: uppercase; letter-spacing: 5px; -webkit-text-fill-color: var(--cyber-primary) !important; background: none !important; }
+    .subtitle { color: var(--cyber-accent); text-shadow: 0 0 5px var(--cyber-accent); font-weight: bold; letter-spacing: 2px; font-family: 'Courier New', monospace; }
+    .score-board { font-family: 'Courier New', monospace; color: var(--cyber-primary); text-shadow: 0 0 10px var(--cyber-primary); font-size: 1.3rem; margin-bottom: 15px; }
+    .btn-cyber { background: transparent; color: var(--cyber-primary); border: 1px solid var(--cyber-primary); padding: 12px 24px; font-family: 'Courier New', monospace; font-weight: bold; text-transform: uppercase; cursor: pointer; transition: all 0.3s; box-shadow: 0 0 10px rgba(0,240,255,0.2); }
+    .btn-cyber:hover { background: var(--cyber-primary); color: #000; box-shadow: 0 0 20px var(--cyber-primary); }
+    .game-area { display: flex; flex-direction: column; align-items: center; padding: 40px 0; }
+    .grid-memory { display: grid; grid-template-columns: repeat(4, 110px); gap: 12px; }
+    .card-mem {
+        width: 110px; height: 110px; background: rgba(0,0,0,0.6); border: 2px solid rgba(0,240,255,0.3);
+        border-radius: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        font-size: 2.5rem; transition: transform 0.6s; transform-style: preserve-3d; position: relative;
+    }
+    .card-mem .front, .card-mem .back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; border-radius: 5px; }
+    .card-mem .front { background: rgba(0,0,0,0.6); border: 1px solid rgba(0,240,255,0.2); }
+    .card-mem .front::after { content: '?'; color: var(--cyber-primary); font-size: 2rem; font-family: 'Courier New', monospace; text-shadow: 0 0 10px var(--cyber-primary); }
+    .card-mem .back { transform: rotateY(180deg); background: rgba(0,240,255,0.15); border: 1px solid var(--cyber-primary); box-shadow: 0 0 15px rgba(0,240,255,0.3); }
+    .card-mem.flipped { transform: rotateY(180deg); }
+    .card-mem.matched { opacity: 0.3; pointer-events: none; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container game-area">
+    <h1>Memory Matrix</h1>
+    <p class="subtitle">NEURAL PATTERN RECALL</p>
+    <div class="score-board">Moves: <span id="move-count">0</span> | Matches: <span id="match-count">0</span></div>
+    <div class="grid-memory" id="gridMemory"></div>
+    <div style="margin-top: 20px; display: flex; gap: 10px;">
+        <button class="btn-cyber" onclick="resetGame()">SHUFFLE DATA</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/games/memorymatch.js' %}"></script>
+{% endblock %}

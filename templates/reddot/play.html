@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --cyber-bg: #0b0f19;
+        --cyber-board: #111a2f;
+        --cyber-primary: #00f0ff;
+        --cyber-secondary: #ff003c;
+        --cyber-accent: #fcee0a;
+        --glow-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+    }
+    body {
+        background: var(--cyber-bg);
+        margin: 0;
+        font-family: 'Courier New', Courier, monospace;
+        color: #fff;
+    }
+    .game-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px;
+    }
+    h1 {
+        font-family: 'Courier New', Courier, monospace;
+        color: var(--cyber-secondary);
+        text-shadow: 0 0 15px var(--cyber-secondary);
+        text-transform: uppercase;
+        letter-spacing: 5px;
+        margin-bottom: 5px;
+    }
+    p.subtitle {
+        color: var(--cyber-primary);
+        letter-spacing: 2px;
+        font-weight: bold;
+        margin-bottom: 20px;
+        text-shadow: 0 0 5px var(--cyber-primary);
+    }
+    
+    .hud-panel {
+        display: flex;
+        justify-content: space-between;
+        width: 800px;
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid var(--cyber-primary);
+        box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.2);
+        padding: 15px 30px;
+        margin-bottom: 30px;
+        border-radius: 5px;
+        font-family: 'Courier New', Courier, monospace;
+        position: relative;
+    }
+    .hud-panel::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 2px;
+        background: linear-gradient(90deg, transparent, var(--cyber-primary), transparent);
+    }
+    .hud-label { color: #8892b0; font-size: 1rem; text-transform: uppercase; }
+    .hud-value { color: var(--cyber-secondary); font-weight: bold; font-size: 1.5rem; text-shadow: 0 0 10px var(--cyber-secondary); }
+    
+    .game-board-wrapper {
+        width: 800px;
+        height: 500px;
+        position: relative;
+        padding: 20px;
+        background: var(--cyber-board);
+        border: 2px solid var(--cyber-primary);
+        border-radius: 10px;
+        box-shadow: 0 0 40px rgba(0, 240, 255, 0.15);
+    }
+
+    #game-area {
+        width: 100%;
+        height: 100%;
+        background: repeating-linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5) 1px, transparent 1px, transparent 20px),
+                    repeating-linear-gradient(90deg, rgba(0,0,0,0.5), rgba(0,0,0,0.5) 1px, transparent 1px, transparent 20px) #111;
+        border: 1px solid rgba(0,240,255,0.3);
+        border-radius: 5px;
+        position: relative;
+        overflow: hidden;
+        cursor: crosshair;
+    }
+    
+    .red-dot {
+        width: 40px;
+        height: 40px;
+        background: var(--cyber-secondary);
+        border-radius: 50%;
+        position: absolute;
+        box-shadow: 0 0 20px var(--cyber-secondary), inset 0 0 10px #fff;
+        cursor: pointer;
+        transition: transform 0.05s ease-out;
+        border: 2px solid #fff;
+    }
+    .red-dot:active {
+        transform: scale(0.6);
+        box-shadow: 0 0 40px var(--cyber-accent);
+        background: var(--cyber-accent);
+    }
+    
+    #start-msg {
+        position: absolute; 
+        top: 50%; left: 50%; 
+        transform: translate(-50%, -50%);
+        text-align: center;
+        background: rgba(11, 15, 25, 0.9);
+        padding: 40px;
+        border: 2px solid var(--cyber-primary);
+        border-radius: 10px;
+        box-shadow: var(--glow-shadow);
+        backdrop-filter: blur(5px);
+        z-index: 10;
+        width: 80%;
+    }
+    
+    .btn-cyber {
+        background: transparent;
+        color: var(--cyber-primary);
+        border: 1px solid var(--cyber-primary);
+        padding: 15px 30px;
+        font-family: 'Courier New', Courier, monospace;
+        font-weight: bold;
+        font-size: 1.2rem;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+        margin-top: 20px;
+    }
+    .btn-cyber:hover {
+        background: var(--cyber-primary);
+        color: #000;
+        box-shadow: 0 0 20px var(--cyber-primary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container game-container">
+    <h1>REFLEX TRIGGER</h1>
+    <p class="subtitle">NEURAL LINK CALIBRATION</p>
+    
+    <div class="hud-panel">
+        <div class="hud-item">
+            <div class="hud-label">Uptime Buffer</div>
+            <div class="hud-value" id="timer" style="color: var(--cyber-primary); text-shadow: 0 0 10px var(--cyber-primary);">30.00s</div>
+        </div>
+        <div class="hud-item" style="text-align: right;">
+            <div class="hud-label">Targets Neutralized</div>
+            <div class="hud-value" id="score">0</div>
+        </div>
+    </div>
+
+    <div class="game-board-wrapper">
+        <div id="game-area">
+            <div id="start-msg">
+                <h2 id="final-score-title" style="margin-bottom: 10px; color: #fff;">AWAITING INITIALIZATION</h2>
+                <p id="final-score-desc" style="color: var(--cyber-primary);">Eliminate rogue targets as fast as possible.</p>
+                <button id="start-btn" class="btn-cyber">ENGAGE PROTOCOL</button>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <button class="btn-cyber" onclick="location.reload()" style="font-size: 1rem; padding: 10px 20px;">SYSTEM REBOOT</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/games/reddot.js' %}"></script>
+{% endblock %}
