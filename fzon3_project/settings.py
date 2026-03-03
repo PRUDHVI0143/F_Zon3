@@ -31,6 +31,8 @@ DEBUG = 'RENDER' not in os.environ
 # Allow all hosts so it works instantly when deployed to any server domain
 ALLOWED_HOSTS = ['*']
 
+CSRF_TRUSTED_ORIGINS = ['https://prudhviraj08.pythonanywhere.com']
+
 
 # Application definition
 
