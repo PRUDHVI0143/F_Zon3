@@ -138,26 +138,44 @@
             sun.position.set(50, 100, 50);
             scene.add(sun);
 
-            // Ground (Infinite Biomes Grid)
-            const groundGeo = new THREE.PlaneGeometry(2000, 2000, 100, 100);
-            const groundMat = new THREE.MeshLambertMaterial({ color: 0x3a9d23, wireframe: false });
-            const ground = new THREE.Mesh(groundGeo, groundMat);
-            ground.rotation.x = -Math.PI / 2;
-            scene.add(ground);
+            // --- INFINITE BIOMES SYSTEM ---
+            const biomes = [
+                { name: 'Forest', color: 0x3a9d23, treeCount: 50 },
+                { name: 'Desert', color: 0xedc9af, treeCount: 20 },
+                { name: 'Tundra', color: 0xffffff, treeCount: 30 },
+                { name: 'Swamp', color: 0x223300, treeCount: 40 },
+                { name: 'Burnt', color: 0x333333, treeCount: 15 }
+            ];
 
-            // Player (The Floating Cube)
-            const playerGeo = new THREE.BoxGeometry(2, 2, 2);
-            const playerMat = new THREE.MeshLambertMaterial({ color: 0x888888 });
-            player = new THREE.Mesh(playerGeo, playerMat);
-            player.position.y = 5;
-            scene.add(player);
+            const tileSize = 200;
+            for(let i=0; i<biomes.length; i++) {
+                const b = biomes[i];
+                const groundGeo = new THREE.PlaneGeometry(tileSize, tileSize);
+                const groundMat = new THREE.MeshLambertMaterial({ color: b.color });
+                const ground = new THREE.Mesh(groundGeo, groundMat);
+                ground.rotation.x = -Math.PI / 2;
+                ground.position.set(i * tileSize - (biomes.length*tileSize)/2, 0, 0);
+                scene.add(ground);
 
-            // Add some Pillars like in screenshot
-            for(let i=0; i<10; i++) {
-                const pillar = new THREE.Mesh(new THREE.BoxGeometry(4, 25, 4), new THREE.MeshLambertMaterial({ color: 0x444444 }));
-                pillar.position.set(Math.random()*200-100, 10, Math.random()*200-100);
-                scene.add(pillar);
+                // Add Biome-specific "Trees" (Pillars)
+                for(let j=0; j<b.treeCount; j++) {
+                    const h = 5 + Math.random() * 20;
+                    const pillar = new THREE.Mesh(new THREE.BoxGeometry(2, h, 2), new THREE.MeshLambertMaterial({ color: b.color }));
+                    pillar.position.set(
+                        ground.position.x + (Math.random()-0.5)*tileSize,
+                        h/2,
+                        ground.position.z + (Math.random()-0.5)*tileSize
+                    );
+                    scene.add(pillar);
+                }
             }
+
+            // Player (The Floating Cube/Character)
+            const playerGeo = new THREE.BoxGeometry(2, 2, 2);
+            const playerMat = new THREE.MeshLambertMaterial({ color: 0xff0000 });
+            player = new THREE.Mesh(playerGeo, playerMat);
+            player.position.set(0, 5, 0);
+            scene.add(player);
 
             camera.position.set(0, 15, 30);
             camera.lookAt(player.position);
