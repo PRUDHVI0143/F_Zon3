@@ -28,6 +28,10 @@ urlpatterns = [
     path('breakout/', include('breakout.urls')),
     path('spaceshooter/', include('spaceshooter.urls')),
     path('endlessrunner/', include('endlessrunner.urls')),
+    path('unfearbugrobot/', include('unfearbugrobot.urls')),
+    path('spacefighter/', include('spacefighter.urls')),
+    path('dungeonquest/', include('dungeonquest.urls')),
+    path('pacmaze/', include('pacmaze.urls')),
 ]
 
 handler404 = 'dashboard.views.error_404'

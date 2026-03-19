@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --unfear-cyan: #00f0ff;
+        --unfear-pink: #ff00ff;
+        --unfear-yellow: #fcee0a;
+        --unfear-bg: #050a14;
+    }
+
+    body {
+        margin: 0;
+        background-color: var(--unfear-bg);
+        color: #fff;
+        overflow: hidden;
+        font-family: 'Courier New', monospace;
+    }
+
+    #game-container {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        background: #000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #gameCanvas {
+        background: #000;
+        box-shadow: 0 0 50px rgba(0, 240, 255, 0.1);
+    }
+
+    .retro-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                    linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+        background-size: 100% 4px, 3px 100%;
+        z-index: 100;
+    }
+
+    /* READY SCREEN */
+    #start-screen {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+        background: rgba(0,0,0,0.8);
+    }
+
+    .ready-title {
+        font-size: 8rem;
+        font-weight: 900;
+        color: #fff;
+        letter-spacing: 20px;
+        text-shadow: 0 0 30px var(--unfear-cyan);
+        margin: 0;
+        animation: pulse 2s infinite;
+    }
+
+    .mission-sub {
+        font-size: 1.5rem;
+        color: var(--unfear-pink);
+        letter-spacing: 10px;
+        margin-bottom: 40px;
+        text-transform: uppercase;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.8; transform: scale(1.05); }
+    }
+
+    .menu-options {
+        display: flex;
+        gap: 40px;
+        margin-bottom: 60px;
+    }
+
+    .option-box {
+        text-align: center;
+    }
+
+    .option-label {
+        font-size: 0.8rem;
+        color: #888;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+    }
+
+    select {
+        background: #000;
+        color: var(--unfear-cyan);
+        border: 2px solid var(--unfear-cyan);
+        padding: 10px 20px;
+        font-family: inherit;
+        font-size: 1.2rem;
+        cursor: pointer;
+        text-transform: uppercase;
+    }
+
+    .init-btn {
+        background: transparent;
+        border: 2px solid var(--unfear-cyan);
+        color: var(--unfear-cyan);
+        padding: 15px 50px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+        letter-spacing: 3px;
+    }
+
+    .init-btn:hover {
+        background: var(--unfear-cyan);
+        color: #000;
+        box-shadow: 0 0 30px var(--unfear-cyan);
+    }
+
+    /* HUD */
+    .hud {
+        position: absolute;
+        top: 30px;
+        right: 40px;
+        text-align: right;
+    }
+
+    .hud-label { font-size: 0.7rem; color: #888; margin-bottom: 5px; }
+    .hud-value { font-size: 2.5rem; font-weight: 900; color: var(--unfear-cyan); text-shadow: 0 0 10px var(--unfear-cyan); }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="game-container">
+    <div class="retro-overlay"></div>
+    
+    <!-- START SCREEN -->
+    <div id="start-screen">
+        <p class="ready-title">READY</p>
+        <p class="mission-sub">PROTECT_THE_FZON3_CORE</p>
+
+        <div class="menu-options">
+            <div class="option-box">
+                <div class="option-label">Difficulty_Level</div>
+                <select id="diff-level">
+                    <option>Normal</option>
+                    <option>Hard</option>
+                    <option>Nightmare</option>
+                </select>
+            </div>
+            <div class="option-box">
+                <div class="option-label">Sector_Select</div>
+                <select id="sector-select">
+                    <option>Sector 1</option>
+                    <option>Sector 2</option>
+                    <option>Sector 3</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="init-btn" id="init-btn">INITIALIZE_SIMULATION</button>
+    </div>
+
+    <!-- HUD -->
+    <div class="hud">
+        <div class="hud-label">SIM_COHERENCE (VIT)</div>
+        <div id="health-bar" style="width: 250px; height: 10px; background: rgba(255,0,0,0.3); border: 1px solid #ff00ff; margin-bottom: 30px;">
+            <div id="health-fill" style="width: 100%; height: 100%; background: #ff00ff; box-shadow: 0 0 15px #ff00ff;"></div>
+        </div>
+        
+        <div class="hud-label">ENERGY_CORES</div>
+        <div class="hud-value" id="score-val">000000</div>
+        
+        <div class="hud-label" style="margin-top: 30px;">SECTOR_ACTIVE: 01</div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+    
+    <div style="position: absolute; bottom: 20px; left: 40px; font-size: 0.8rem; color: #444; letter-spacing: 2px;">
+        PLAYER_READY // [MOUSE] AIM & FIRE // [WASD] MANEUVER
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function() {
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const startScreen = document.getElementById('start-screen');
+        const initBtn = document.getElementById('init-btn');
+        
+        let W, H;
+        let player, enemies = [], bullets = [], particles = [];
+        let score = 0, health = 100, frame = 0;
+        let gameActive = false;
+
+        function resize() {
+            W = canvas.width = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+        }
+
+        class Bullet {
+            constructor(x, y, angle) {
+                this.x = x; this.y = y;
+                this.vx = Math.cos(angle) * 15;
+                this.vy = Math.sin(angle) * 15;
+            }
+            update() { this.x += this.vx; this.y += this.vy; }
+            draw() {
+                ctx.fillStyle = '#00f0ff';
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#00f0ff';
+                ctx.fillRect(this.x-2, this.y-2, 4, 15);
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        class Enemy {
+            constructor() {
+                this.x = Math.random() * W;
+                this.y = -50;
+                this.size = 40;
+                this.speed = 2 + Math.random() * 3;
+            }
+            update() { this.y += this.speed; }
+            draw() {
+                ctx.strokeStyle = '#ff00ff';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(this.x, this.y, this.size, this.size);
+                // Inner diamond
+                ctx.beginPath();
+                ctx.moveTo(this.x + 20, this.y + 5);
+                ctx.lineTo(this.x + 35, this.y + 20);
+                ctx.lineTo(this.x + 20, this.y + 35);
+                ctx.lineTo(this.x + 5, this.y + 20);
+                ctx.closePath();
+                ctx.stroke();
+            }
+        }
+
+        function initGame() {
+            resize();
+            gameActive = true;
+            startScreen.style.display = 'none';
+            player = { x: W/2, y: H - 100 };
+            loop();
+        }
+
+        function loop() {
+            if (!gameActive) return;
+            frame++;
+            ctx.clearRect(0, 0, W, H);
+
+            // Grid Background
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.05)';
+            ctx.lineWidth = 1;
+            for(let i=0; i<W; i+=50) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke(); }
+            for(let i=0; i<H; i+=50) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(W, i); ctx.stroke(); }
+
+            // Enemies
+            if (frame % 30 === 0) enemies.push(new Enemy());
+            enemies.forEach((e, i) => {
+                e.update(); e.draw();
+                if (e.y > H) { enemies.splice(i, 1); health -= 5; }
+                
+                // Collision with player
+                if (Math.abs(e.x - player.x) < 40 && Math.abs(e.y - player.y) < 40) {
+                    enemies.splice(i, 1); health -= 10;
+                }
+            });
+
+            // Bullets
+            bullets.forEach((b, i) => {
+                b.update(); b.draw();
+                if (b.y < -50) bullets.splice(i, 1);
+
+                enemies.forEach((e, ei) => {
+                    if (b.x > e.x && b.x < e.x + e.size && b.y > e.y && b.y < e.y + e.size) {
+                        enemies.splice(ei, 1);
+                        bullets.splice(i, 1);
+                        score += 500;
+                    }
+                });
+            });
+
+            // Player
+            ctx.fillStyle = '#fff';
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = '#00f0ff';
+            ctx.fillRect(player.x - 20, player.y - 10, 40, 20);
+            ctx.shadowBlur = 0;
+
+            // HUD
+            document.getElementById('health-fill').style.width = health + '%';
+            document.getElementById('score-val').innerText = score.toString().padStart(6, '0');
+
+            if (health <= 0) { gameActive = false; alert('MISSION FAILED'); location.reload(); }
+            else requestAnimationFrame(loop);
+        }
+
+        window.addEventListener('mousemove', (e) => { player.x = e.clientX; });
+        window.addEventListener('mousedown', () => { if(gameActive) bullets.push(new Bullet(player.x, player.y-20, -Math.PI/2)); });
+        initBtn.addEventListener('click', initGame);
+        window.addEventListener('resize', resize);
+    })();
+</script>
+{% endblock %}

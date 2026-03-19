@@ -1,0 +1,552 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --fighter-primary: #00f0ff;
+        --fighter-secondary: #ff003c;
+        --fighter-bg: #050a14;
+    }
+
+    body {
+        background-color: #000;
+        color: #fff;
+        margin: 0;
+        overflow: hidden;
+        font-family: 'Outfit', sans-serif;
+    }
+
+    #game-container {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle, #0a1428 0%, #000 100%);
+    }
+
+    .retro-title {
+        font-size: 4rem;
+        font-style: italic;
+        font-weight: 900;
+        color: #fff;
+        text-shadow: 0 0 20px var(--fighter-primary);
+        margin-bottom: 30px;
+        letter-spacing: 5px;
+        text-transform: uppercase;
+    }
+
+    /* SELECTION SCREEN */
+    #selection-screen {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        z-index: 10;
+    }
+
+    .mode-select {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+
+    .mode-btn {
+        background: transparent;
+        border: 2px solid var(--fighter-primary);
+        color: var(--fighter-primary);
+        padding: 10px 30px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+        box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+    }
+
+    .mode-btn.active {
+        background: var(--fighter-primary);
+        color: #000;
+        box-shadow: 0 0 20px var(--fighter-primary);
+    }
+
+    .config-row {
+        margin-bottom: 20px;
+        color: var(--fighter-primary);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        font-size: 0.9rem;
+    }
+
+    select {
+        background: #000;
+        color: #fff;
+        border: 1px solid var(--fighter-primary);
+        padding: 5px 10px;
+    }
+
+    .char-grid {
+        display: flex;
+        gap: 20px;
+        margin-top: 40px;
+    }
+
+    .char-card {
+        width: 160px;
+        height: 200px;
+        border: 2px solid #555;
+        background: rgba(255,255,255,0.05);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: 0.3s;
+        position: relative;
+    }
+
+    .char-card:hover {
+        border-color: #fff;
+        transform: scale(1.05);
+    }
+
+    .char-card.selected-p1 { border-color: var(--fighter-primary); box-shadow: 0 0 20px var(--fighter-primary); }
+    .char-card.selected-p2 { border-color: var(--fighter-secondary); box-shadow: 0 0 20px var(--fighter-secondary); }
+
+    .char-icon {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 15px;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+
+    .char-name { font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; }
+    .char-desc { font-size: 0.7rem; color: #888; }
+
+    #start-btn {
+        margin-top: 50px;
+        padding: 15px 60px;
+        font-size: 1.5rem;
+        background: #444;
+        color: #888;
+        border: none;
+        cursor: not-allowed;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+
+    #start-btn.ready {
+        background: #fff;
+        color: #000;
+        cursor: pointer;
+        box-shadow: 0 0 30px #fff;
+    }
+
+    /* GAMEPLAY */
+    #gameplay-screen {
+        display: none;
+        width: 100%;
+        height: 100%;
+        position: relative;
+    }
+
+    #gameCanvas {
+        background: #000;
+        width: 100%;
+        height: 100%;
+    }
+
+    .overlay-ui {
+        position: absolute;
+        top: 40px;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 50px;
+        box-sizing: border-box;
+    }
+
+    .health-bar-container {
+        width: 40%;
+        height: 30px;
+        background: rgba(255,255,255,0.1);
+        border: 2px solid #fff;
+        position: relative;
+    }
+
+    .health-fill {
+        height: 100%;
+        width: 100%;
+        transition: 0.2s;
+    }
+
+    #p1-health { background: var(--fighter-primary); float: right; }
+    #p2-health { background: var(--fighter-secondary); }
+
+    .timer {
+        font-size: 3rem;
+        font-weight: 900;
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="game-container">
+    <!-- SELECTION SCREEN -->
+    <div id="selection-screen">
+        <h1 class="retro-title">SPACE FIGHTER</h1>
+        
+        <div class="mode-select">
+            <button class="mode-btn active" id="mode-vs-cpu">1 PLAYER (VS CPU)</button>
+            <button class="mode-btn" id="mode-vs-p2">2 PLAYERS</button>
+            <button class="mode-btn" style="background: #e6b400; color: #000; border: none;">CONTROL MANUAL</button>
+        </div>
+
+        <div class="config-row">
+            CPU DIFFICULTY: 
+            <select id="diff-select">
+                <option value="easy">Easy</option>
+                <option value="normal">Normal</option>
+                <option value="hard">Hard</option>
+            </select>
+        </div>
+
+        <div class="config-row">
+            SELECT ARENA: 
+            <select id="arena-select">
+                <option value="deep-asteroid">Deep Asteroid</option>
+                <option value="neon-city">Neon City</option>
+                <option value="shadow-base">Shadow Base</option>
+            </select>
+        </div>
+
+        <p style="margin-top: 30px; font-weight: bold; letter-spacing: 1px;">P1 Click = Assign, Right-click = Assign P2</p>
+
+        <div class="char-grid">
+            <div class="char-card" data-char="marine" id="card-marine">
+                <div class="char-icon" style="background-image: url('{% static 'images/spacefighter/marine.png' %}');"></div>
+                <div class="char-name">Space Marine</div>
+                <div class="char-desc">Balanced</div>
+            </div>
+            <div class="char-card" data-char="alien" id="card-alien">
+                <div class="char-icon" style="background-image: url('{% static 'images/spacefighter/alien.png' %}');"></div>
+                <div class="char-name">Alien Warrior</div>
+                <div class="char-desc">Fast / TP</div>
+            </div>
+            <div class="char-card" data-char="robot" id="card-robot">
+                <div class="char-icon" style="background-image: url('{% static 'images/spacefighter/robot.png' %}');"></div>
+                <div class="char-name">Robot Titan</div>
+                <div class="char-desc">Heavy Armor</div>
+            </div>
+            <div class="char-card" data-char="ninja" id="card-ninja">
+                <div class="char-icon" style="background-image: url('{% static 'images/spacefighter/ninja.png' %}');"></div>
+                <div class="char-name">Cosmic Ninja</div>
+                <div class="char-desc">Combo Dash</div>
+            </div>
+        </div>
+
+        <button id="start-btn">START BATTLE</button>
+    </div>
+
+    <!-- GAMEPLAY SCREEN -->
+    <div id="gameplay-screen">
+        <div class="overlay-ui">
+            <div class="health-bar-container">
+                <div id="p1-health" class="health-fill"></div>
+                <div style="position: absolute; top: -25px; right: 0; font-weight: bold; color: var(--fighter-primary);">P1 • <span id="p1-name-label">PLAYER</span></div>
+            </div>
+            <div class="timer" id="game-timer">99</div>
+            <div class="health-bar-container">
+                <div id="p2-health" class="health-fill"></div>
+                <div style="position: absolute; top: -25px; left: 0; font-weight: bold; color: var(--fighter-secondary);">P2 • <span id="p2-name-label">CPU</span></div>
+            </div>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function() {
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const selectionScreen = document.getElementById('selection-screen');
+        const gameplayScreen = document.getElementById('gameplay-screen');
+        const startBtn = document.getElementById('start-btn');
+        
+        let p1Char = null;
+        let p2Char = 'alien'; // Default for CPU
+        let isVsCpu = true;
+
+        // Selection Logic
+        document.querySelectorAll('.char-card').forEach(card => {
+            card.addEventListener('click', () => {
+                p1Char = card.dataset.char;
+                document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected-p1'));
+                card.classList.add('selected-p1');
+                checkReady();
+            });
+
+            card.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                if (isVsCpu) return;
+                p2Char = card.dataset.char;
+                document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected-p2'));
+                card.classList.add('selected-p2');
+                checkReady();
+            });
+        });
+
+        document.getElementById('mode-vs-cpu').addEventListener('click', () => {
+            isVsCpu = true;
+            document.getElementById('mode-vs-cpu').classList.add('active');
+            document.getElementById('mode-vs-p2').classList.remove('active');
+            document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected-p2'));
+            p2Char = 'alien'; 
+            checkReady();
+        });
+
+        document.getElementById('mode-vs-p2').addEventListener('click', () => {
+            isVsCpu = false;
+            document.getElementById('mode-vs-cpu').classList.remove('active');
+            document.getElementById('mode-vs-p2').classList.add('active');
+            p2Char = null;
+            checkReady();
+        });
+
+        function checkReady() {
+            if (p1Char && p2Char) {
+                startBtn.classList.add('ready');
+                startBtn.innerText = 'START BATTLE';
+            } else {
+                startBtn.classList.remove('ready');
+                startBtn.innerText = isVsCpu ? 'SELECT FIGHTER' : 'SELECT BOTH';
+            }
+        }
+
+        startBtn.addEventListener('click', () => {
+            if (!startBtn.classList.contains('ready')) return;
+            selectionScreen.style.display = 'none';
+            gameplayScreen.style.display = 'block';
+            initGame();
+        });
+
+        // Game Engine
+        let W, H;
+        let player, opponent;
+        let particles = [];
+        let gameTime = 99;
+        let gameInterval;
+
+        function resize() {
+            W = canvas.width = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+        }
+
+        const assets = {
+            marine: new Image(),
+            alien: new Image(),
+            robot: new Image(),
+            ninja: new Image()
+        };
+        assets.marine.src = "{% static 'images/spacefighter/marine.png' %}";
+        assets.alien.src = "{% static 'images/spacefighter/alien.png' %}";
+        assets.robot.src = "{% static 'images/spacefighter/robot.png' %}";
+        assets.ninja.src = "{% static 'images/spacefighter/ninja.png' %}";
+
+        class Fighter {
+            constructor(x, side, charType, isPlayer) {
+                this.x = x;
+                this.y = H - 250;
+                this.w = 120;
+                this.h = 180;
+                this.side = side; // 1 or -1
+                this.char = charType;
+                this.isPlayer = isPlayer;
+                this.hp = 100;
+                this.vx = 0;
+                this.vy = 0;
+                this.gravity = 0.8;
+                this.jumping = false;
+                this.attacking = false;
+                this.attackFrame = 0;
+                this.speed = 8;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.y < H - 250) {
+                    this.vy += this.gravity;
+                } else {
+                    this.y = H - 250;
+                    this.vy = 0;
+                    this.jumping = false;
+                }
+
+                // AI basic movement
+                if (!this.isPlayer && isVsCpu) {
+                    const dist = Math.abs(player.x - this.x);
+                    if (dist > 150) {
+                        this.vx = (player.x < this.x ? -1 : 1) * (this.speed * 0.6);
+                    } else {
+                        this.vx = 0;
+                        if (Math.random() < 0.05) this.attack();
+                    }
+                }
+
+                if (this.attacking) {
+                    this.attackFrame++;
+                    if (this.attackFrame > 15) {
+                        this.attacking = false;
+                        this.attackFrame = 0;
+                    }
+                }
+
+                this.x = Math.max(0, Math.min(W - this.w, this.x));
+            }
+
+            draw() {
+                ctx.save();
+                if (this.side === -1) {
+                    ctx.translate(this.x + this.w, this.y);
+                    ctx.scale(-1, 1);
+                } else {
+                    ctx.translate(this.x, this.y);
+                }
+
+                // Shadow
+                ctx.fillStyle = 'rgba(0,0,0,0.3)';
+                ctx.beginPath();
+                ctx.ellipse(this.w/2, this.h, 60, 15, 0, 0, Math.PI*2);
+                ctx.fill();
+
+                // Sprite
+                const img = assets[this.char];
+                if (img.complete) {
+                    ctx.drawImage(img, 0, 0, this.w, this.h);
+                } else {
+                    ctx.fillStyle = this.isPlayer ? 'cyan' : 'magenta';
+                    ctx.fillRect(0,0,this.w,this.h);
+                }
+
+                // Attack Effect
+                if (this.attacking) {
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 5;
+                    ctx.beginPath();
+                    ctx.arc(this.w + 20, this.h/2, 40, -Math.PI/4, Math.PI/4);
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+            }
+
+            attack() {
+                if (this.attacking) return;
+                this.attacking = true;
+                this.attackFrame = 0;
+
+                // Check hit
+                const other = this.isPlayer ? opponent : player;
+                const dist = Math.abs(this.x - other.x);
+                if (dist < 200) {
+                    other.hp -= 5;
+                    createHitParticles(other.x + other.w/2, other.y + other.h/2);
+                }
+            }
+        }
+
+        function createHitParticles(x, y) {
+            for(let i=0; i<10; i++) {
+                particles.push({
+                    x, y,
+                    vx: (Math.random()-0.5)*10,
+                    vy: (Math.random()-0.5)*10,
+                    life: 1.0,
+                    size: Math.random()*5+2
+                });
+            }
+        }
+
+        function initGame() {
+            resize();
+            player = new Fighter(W*0.2, 1, p1Char, true);
+            opponent = new Fighter(W*0.7, -1, p2Char, false);
+            document.getElementById('p1-name-label').innerText = p1Char.toUpperCase();
+            document.getElementById('p2-name-label').innerText = isVsCpu ? 'CPU (' + p2Char.toUpperCase() + ')' : p2Char.toUpperCase();
+            
+            gameTime = 99;
+            gameInterval = setInterval(() => {
+                gameTime--;
+                document.getElementById('game-timer').innerText = gameTime;
+                if (gameTime <=0 ) endGame();
+            }, 1000);
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function gameLoop() {
+            if (gameTime <= 0) return;
+
+            ctx.clearRect(0, 0, W, H);
+
+            // Ground
+            ctx.fillStyle = '#0a1428';
+            ctx.fillRect(0, H-70, W, 70);
+            ctx.strokeStyle = 'cyan';
+            ctx.lineWidth = 2;
+            for(let i=0; i<W; i+=50) {
+                ctx.beginPath(); ctx.moveTo(i, H-70); ctx.lineTo(i, H); ctx.stroke();
+            }
+
+            player.update();
+            opponent.update();
+
+            player.draw();
+            opponent.draw();
+
+            // Particles
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy; p.life -= 0.02;
+                ctx.fillStyle = `rgba(255,255,255,${p.life})`;
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+                if (p.life <= 0) particles.splice(i, 1);
+            });
+
+            // Update UI
+            document.getElementById('p1-health').style.width = player.hp + '%';
+            document.getElementById('p2-health').style.width = opponent.hp + '%';
+
+            if (player.hp <= 0 || opponent.hp <= 0) endGame();
+            else requestAnimationFrame(gameLoop);
+        }
+
+        function endGame() {
+            clearInterval(gameInterval);
+            const winner = player.hp > opponent.hp ? 'PLAYER 1' : 'OPPONENT';
+            alert(winner + ' WINS!');
+            location.reload();
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (!gameplayScreen.style.display === 'block') return;
+            if (e.key === 'a' || e.key === 'ArrowLeft') player.vx = -player.speed;
+            if (e.key === 'd' || e.key === 'ArrowRight') player.vx = player.speed;
+            if (e.key === 'w' || e.key === 'ArrowUp') { if(!player.jumping) { player.vy = -20; player.jumping = true; } }
+            if (e.key === ' ' || e.key === 'f') player.attack();
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'a' || e.key === 'ArrowLeft' || e.key === 'd' || e.key === 'ArrowRight') player.vx = 0;
+        });
+
+    })();
+</script>
+{% endblock %}

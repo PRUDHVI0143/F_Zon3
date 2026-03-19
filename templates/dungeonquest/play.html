@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    body {
+        margin: 0;
+        overflow: hidden;
+        background: #000;
+        font-family: 'Courier New', monospace;
+    }
+
+    #ui-container {
+        position: absolute;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* TERMINAL LOG */
+    #terminal-overlay {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        width: 400px;
+        height: 200px;
+        background: rgba(0, 0, 0, 0.8);
+        border: 2px solid #00f0ff;
+        border-radius: 5px;
+        padding: 15px;
+        color: #00f0ff;
+        font-size: 0.9rem;
+        box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+        opacity: 0;
+        transition: opacity 1s;
+    }
+
+    .log-line {
+        margin-bottom: 8px;
+        border-left: 3px solid #00f0ff;
+        padding-left: 10px;
+    }
+
+    /* MINIMAP */
+    #minimap {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 150px;
+        height: 250px;
+        background: rgba(0, 240, 255, 0.2);
+        border: 2px solid #00f0ff;
+    }
+
+    /* HUD BOTTOM */
+    #hud-bottom {
+        margin-top: auto;
+        padding: 20px;
+        display: flex;
+        gap: 20px;
+    }
+
+    .hud-btn {
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid #00f0ff;
+        color: #fff;
+        padding: 10px 20px;
+        pointer-events: auto;
+        cursor: pointer;
+    }
+
+    /* LOADING SCREEN */
+    #loading-screen {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="loading-screen">
+    <div style="color: #00f0ff; font-size: 2rem; letter-spacing: 5px;">INITIALIZING_HYPERSPACE...</div>
+</div>
+
+<div id="ui-container">
+    <div id="terminal-overlay">
+        <div class="log-line">> SYSTEM BOOT INITIATED...</div>
+        <div class="log-line">> Creating WebGL Projection Layer...</div>
+        <div class="log-line">> THREE.js Core: LOADED [Rev 128]</div>
+        <div class="log-line">> Neural Engine: INITIALIZED</div>
+        <div class="log-line">> BOOT SEQUENCE COMPLETE.</div>
+    </div>
+
+    <div id="minimap"></div>
+
+    <div id="hud-bottom">
+        <div class="hud-btn">[ T ]</div>
+        <div class="hud-btn">FULL</div>
+    </div>
+</div>
+
+<div id="game-canvas-container"></div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Include Three.js from CDN since local is missing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+    (function() {
+        // --- 3D ENGINE ---
+        let scene, camera, renderer, player, clock;
+        let biomes = ['forest', 'desert', 'tundra', 'swamp', 'burnt'];
+        let trees = [];
+
+        function init() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x87ceeb); // Sky blue
+            document.getElementById('game-canvas-container').appendChild(renderer.domElement);
+
+            clock = new THREE.Clock();
+
+            // Lighting
+            const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambient);
+            const sun = new THREE.DirectionalLight(0xffffff, 0.8);
+            sun.position.set(50, 100, 50);
+            scene.add(sun);
+
+            // Ground (Infinite Biomes Grid)
+            const groundGeo = new THREE.PlaneGeometry(2000, 2000, 100, 100);
+            const groundMat = new THREE.MeshLambertMaterial({ color: 0x3a9d23, wireframe: false });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.rotation.x = -Math.PI / 2;
+            scene.add(ground);
+
+            // Player (The Floating Cube)
+            const playerGeo = new THREE.BoxGeometry(2, 2, 2);
+            const playerMat = new THREE.MeshLambertMaterial({ color: 0x888888 });
+            player = new THREE.Mesh(playerGeo, playerMat);
+            player.position.y = 5;
+            scene.add(player);
+
+            // Add some Pillars like in screenshot
+            for(let i=0; i<10; i++) {
+                const pillar = new THREE.Mesh(new THREE.BoxGeometry(4, 25, 4), new THREE.MeshLambertMaterial({ color: 0x444444 }));
+                pillar.position.set(Math.random()*200-100, 10, Math.random()*200-100);
+                scene.add(pillar);
+            }
+
+            camera.position.set(0, 15, 30);
+            camera.lookAt(player.position);
+
+            animate();
+            
+            // Show UI sequence
+            setTimeout(() => {
+                document.getElementById('loading-screen').style.display = 'none';
+                document.getElementById('terminal-overlay').style.opacity = '1';
+            }, 2000);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getElapsedTime();
+            
+            // Camera follow
+            camera.position.x = player.position.x;
+            camera.position.z = player.position.z + 30;
+            camera.lookAt(player.position);
+
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            const speed = 1.5;
+            if (e.key === 'w') player.position.z -= speed;
+            if (e.key === 's') player.position.z += speed;
+            if (e.key === 'a') player.position.x -= speed;
+            if (e.key === 'd') player.position.x += speed;
+            if (e.key === ' ' || e.key === 'j') player.position.y = 10; // Simple jump
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === ' ' || e.key === 'j') player.position.y = 5;
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        init();
+    })();
+</script>
+{% endblock %}

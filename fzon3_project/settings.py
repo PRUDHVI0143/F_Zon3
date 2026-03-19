@@ -65,6 +65,10 @@ INSTALLED_APPS = [
     'breakout',
     'spaceshooter',
     'endlessrunner',
+    'unfearbugrobot',
+    'spacefighter',
+    'dungeonquest',
+    'pacmaze',
 ]
 
 MIDDLEWARE = [
