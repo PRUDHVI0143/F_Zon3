@@ -1,9 +1,12 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic.base import RedirectView
 
 urlpatterns = [
+    re_path(r'^favicon\.ico$', RedirectView.as_view(url='/static/favicon.ico', permanent=True)),
+    re_path(r'^favicon\.png$', RedirectView.as_view(url='/static/favicon.png', permanent=True)),
     path('admin/', admin.site.admin_url if hasattr(admin.site, 'admin_url') else admin.site.urls), # standard way
     path('', include('dashboard.urls')),
     path('accounts/', include('accounts.urls')),
