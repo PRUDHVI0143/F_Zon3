@@ -1,14 +1,13 @@
 from django.shortcuts import render
 from django.views.generic import TemplateView, View
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 import json
 from leaderboard.models import Game, GameScore
 
-class GameView(LoginRequiredMixin, TemplateView):
+class GameView(TemplateView):
     template_name = 'ludo/play.html'
 
-class SubmitScoreView(LoginRequiredMixin, View):
+class SubmitScoreView(View):
     def post(self, request, *args, **kwargs):
         # Ludo win detection logic
         game = Game.objects.get_or_create(name='Ludo', slug='ludo')[0]

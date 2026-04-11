@@ -175,7 +175,7 @@
             style="position: absolute; right: 80px; bottom: -20px; z-index: 10; animation: floatHUD 6s infinite; filter: drop-shadow(0 0 30px rgba(255, 49, 49, 0.4));">
             <div class="fbot-speech" id="bot-speech-bubble"
                 style="background: rgba(255, 49, 49, 0.1); backdrop-filter: blur(12px); border: 1px solid rgba(255, 49, 49, 0.4); padding: 10px 18px; border-radius: 20px 20px 0 20px; color: #ff3131; font-size: 0.85rem; font-family: 'Space Grotesk', sans-serif; font-weight: bold; margin-bottom: 10px; text-shadow: 0 0 10px rgba(255, 49, 49, 0.3); text-align: center;">
-                UPLINK ERROR: SWAG.EXE NOT FOUND.<br>READY, {{ user.profile.nickname|default:user.username|upper }}?
+                UPLINK ERROR: SWAG.EXE NOT FOUND.<br>READY, {% if user.is_authenticated %}{{ user.profile.nickname|default:user.username|upper }}{% else %}GUEST{% endif %}?
             </div>
             <img src="https://image.pollinations.ai/prompt/A%20funny,%20clumsy%20version%20of%20the%20obsidian%20black%20gaming%20robot%20with%20red%20LED%20eyes.%20The%20robot%20tries%20to%20look%20intimidating%20in%20its%20dark%20industrial%20hangar,%20but%20its%20head%20suddenly%20tilts%20at%20a%20goofy%20angle%20due%20to%20a%20%27system%20error.%27%20Its%20red%20eyes%20flicker%20into%20pixelated%20%27D:%27%20emoji%20faces.%20One%20of%20its%20mechanical%20ears%20twitches%20uncontrollably,%20and%20it%20lets%20out%20a%20small%20puff%20of%20digital%20smoke%20while%20looking%20confused%20at%20the%20camera.%20Cyberpunk%20aesthetic%20but%20with%20a%20slapstick,%20humorous%20gaming%20vibe?width=300&height=300&nologo=true"
                 alt="Clumsy Glitch Bot"
@@ -187,8 +187,9 @@
             <div class="hud-element" style="top: -20px; right: 0;">ZONE_LATENCY: 5ms</div>
             <h1
                 style="font-size: 3.2rem; margin-bottom: 15px; color: #fff; text-shadow: 0 0 20px rgba(0,0,0,0.8); font-family: 'Outfit', sans-serif; font-weight: 700;">
-                Welcome, <span style="color: var(--primary); font-weight: 700; letter-spacing: -1px;">{{
-                    user.email|default:user.username }}</span>
+                Welcome, <span style="color: var(--primary); font-weight: 700; letter-spacing: -1px;">
+                    {% if user.is_authenticated %}{{ user.profile.nickname|default:user.username|upper }}{% else %}GUEST{% endif %}
+                </span>
             </h1>
             <p
                 style="font-size: 1.1rem; color: #fff; max-width: 500px; margin-bottom: 30px; letter-spacing: 0.5px; line-height: 1.6; text-shadow: 0 0 10px rgba(0,0,0,0.8);">
@@ -209,19 +210,19 @@
 <div class="container">
     <div class="stats-grid">
         <div class="stat-item stagger-item">
-            <span class="stat-val counter" data-target="{{ total_played }}">0</span>
+            <span class="stat-val counter" data-target="{{ total_played|default:0 }}">0</span>
             <span class="stat-label">Games Played</span>
         </div>
         <div class="stat-item stagger-item">
-            <span class="stat-val counter" data-target="{{ user.profile.total_wins }}">0</span>
+            <span class="stat-val counter" data-target="{% if user.is_authenticated %}{{ user.profile.total_wins }}{% else %}0{% endif %}">0</span>
             <span class="stat-label">Total Wins</span>
         </div>
         <div class="stat-item stagger-item">
-            <span class="stat-val">#{{ user.profile.get_rank }}</span>
+            <span class="stat-val">{% if user.is_authenticated %}#{{ user.profile.get_rank }}{% else %}N/A{% endif %}</span>
             <span class="stat-label">World Rank</span>
         </div>
         <div class="stat-item stagger-item">
-            <span class="stat-val counter" data-target="{{ user.profile.total_score }}">0</span>
+            <span class="stat-val counter" data-target="{% if user.is_authenticated %}{{ user.profile.total_score }}{% else %}0{% endif %}">0</span>
             <span class="stat-label">Global Rank Points</span>
         </div>
     </div>
@@ -447,13 +448,13 @@
                     speech.style.borderColor = "rgba(0, 242, 255, 0.4)";
                     speech.style.color = "#00f2ff";
                     speech.style.textShadow = "0 0 10px rgba(0, 242, 255, 0.3)";
-                    speech.innerHTML = "SYSTEM BRIGHT.<br>READY TO PLAY, {{ user.profile.nickname|default:user.username|upper }}?";
+                    speech.innerHTML = "SYSTEM BRIGHT.<br>READY TO PLAY, {% if user.is_authenticated %}{{ user.profile.nickname|default:user.username|upper }}{% else %}GUEST{% endif %}?";
                 } else {
                     speech.style.background = "rgba(255, 49, 49, 0.1)";
                     speech.style.borderColor = "rgba(255, 49, 49, 0.4)";
                     speech.style.color = "#ff3131";
                     speech.style.textShadow = "0 0 10px rgba(255, 49, 49, 0.3)";
-                    speech.innerHTML = "UPLINK ERROR: SWAG.EXE NOT FOUND.<br>READY, {{ user.profile.nickname|default:user.username|upper }}?";
+                    speech.innerHTML = "UPLINK ERROR: SWAG.EXE NOT FOUND.<br>READY, {% if user.is_authenticated %}{{ user.profile.nickname|default:user.username|upper }}{% else %}GUEST{% endif %}?";
                 }
             }
         }

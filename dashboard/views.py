@@ -1,18 +1,21 @@
 from django.shortcuts import render
 from django.views.generic import TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin
 from leaderboard.models import Game, GameScore
 
-class HomeView(LoginRequiredMixin, TemplateView):
+class HomeView(TemplateView):
     template_name = 'dashboard/home.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Optimized: Fetch games with pre-assigned data
         context['games'] = Game.objects.all()
-        # Optimized: select_related('game') avoids N+1 queries in template
-        context['recent_scores'] = GameScore.objects.filter(user=self.request.user).select_related('game').order_by('-achieved_at')[:5]
-        context['total_played'] = self.request.user.profile.total_games_played
+        
+        if self.request.user.is_authenticated:
+            context['recent_scores'] = GameScore.objects.filter(user=self.request.user).select_related('game').order_by('-achieved_at')[:5]
+            context['total_played'] = self.request.user.profile.total_games_played
+        else:
+            context['recent_scores'] = []
+            context['total_played'] = 0
+            
         return context
 
 def error_404(request, exception):
@@ -21,7 +24,7 @@ def error_404(request, exception):
 def error_500(request):
     return render(request, '500.html', status=500)
 
-class AnalyticsView(LoginRequiredMixin, TemplateView):
+class AnalyticsView(TemplateView):
     template_name = 'dashboard/analytics.html'
 
     def get_context_data(self, **kwargs):

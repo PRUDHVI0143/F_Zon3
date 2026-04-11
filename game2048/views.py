@@ -1,17 +1,19 @@
 from django.shortcuts import render
 from django.views.generic import TemplateView, View
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
 import json
 from leaderboard.models import Game, GameScore
 
-class GameView(LoginRequiredMixin, TemplateView):
+class GameView(TemplateView):
     template_name = 'game2048/play.html'
 
-class SubmitScoreView(LoginRequiredMixin, View):
+class SubmitScoreView(View):
     def post(self, request, *args, **kwargs):
         data = json.loads(request.body)
         score_val = data.get('score', 0)
+        if not request.user.is_authenticated:
+            return JsonResponse({'status': 'guest_score_not_saved', 'score': score_val})
+
         game = Game.objects.get(slug='game2048')
         
         GameScore.objects.create(
