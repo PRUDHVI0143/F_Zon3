@@ -32,8 +32,13 @@ body.light-theme {
 }
 
 /* Base Body Update */
-body {
+body.theme-transition {
     transition: background-color 0.5s ease, color 0.5s ease;
+}
+body.theme-transition .navbar,
+body.theme-transition .game-card,
+body.theme-transition .glass {
+    transition: background-color 0.5s ease, border-color 0.5s ease, color 0.5s ease;
 }
 
 * {

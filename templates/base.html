@@ -17,20 +17,16 @@
     <!-- Main CSS -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     {% block extra_css %}{% endblock %}
-    <script>
-        // IMMEDIATE THEME INITIALIZATION
-        (function () {
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'light') {
-                document.addEventListener('DOMContentLoaded', () => {
-                    document.body.classList.add('light-theme');
-                });
-            }
-        })();
-    </script>
+
 </head>
 
 <body class="">
+    <!-- IMMEDIATE THEME INITIALIZATION TO PREVENT FOUC -->
+    <script>
+        if (localStorage.getItem('theme') === 'light') {
+            document.body.classList.add('light-theme');
+        }
+    </script>
     <!-- Navigation -->
     <nav class="navbar">
         <div class="container nav-container">

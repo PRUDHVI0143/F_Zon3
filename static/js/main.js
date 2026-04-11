@@ -7,12 +7,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load saved theme
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'light') {
-        body.classList.add('light-theme');
         themeIcon.className = 'fas fa-sun';
     }
 
     if (themeToggle) {
         themeToggle.addEventListener('click', () => {
+            body.classList.add('theme-transition'); // Enable animation specifically during toggle
+            
             body.classList.toggle('light-theme');
             const isLight = body.classList.contains('light-theme');
             themeIcon.className = isLight ? 'fas fa-sun' : 'fas fa-moon';
@@ -23,7 +24,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Trigger a soft glow effect on toggle
             themeToggle.classList.add('switching');
-            setTimeout(() => themeToggle.classList.remove('switching'), 500);
+            setTimeout(() => {
+                themeToggle.classList.remove('switching');
+                body.classList.remove('theme-transition'); // Disable animation after
+            }, 500);
         });
     }
 
