@@ -235,6 +235,8 @@
                 <div class="card-banner">ID: {{ game.id|add:"100" }}</div>
                 {% if game.slug == 'unfearbugrobot' %}
                 <img src="{% static 'img/bug_bg.png' %}" alt="{{ game.name }}" style="object-fit: cover;">
+                {% elif game.slug == 'pacmaze' %}
+                <img src="{% static 'img/pacman_bg.png' %}" alt="{{ game.name }}" style="object-fit: cover;">
                 {% elif game.image %}
                 <img src="{{ game.image.url }}" alt="{{ game.name }}">
                 {% else %}

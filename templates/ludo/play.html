@@ -145,9 +145,14 @@
         color: #000;
         box-shadow: 0 0 20px var(--cyber-primary);
     }
+    .btn-cyber.pc-selected {
+        background: var(--cyber-primary);
+        color: #000;
+        box-shadow: 0 0 20px var(--cyber-primary);
+    }
     
-    .panel-left { grid-row: 1; grid-column: 1; display:flex; flex-direction:column; justify-content:space-between; height:100%; }
-    .panel-right { grid-row: 1; grid-column: 3; display:flex; flex-direction:column; justify-content:space-between; height:100%; }
+    .panel-left { grid-row: 1; grid-column: 1; display:flex; flex-direction:column; justify-content:center; gap: 50px; height:100%; }
+    .panel-right { grid-row: 1; grid-column: 3; display:flex; flex-direction:column; justify-content:center; gap: 50px; height:100%; }
 
     /* 3D Dice styling */
     .dice-container {
@@ -351,6 +356,13 @@
         <div class="modal-content">
             <h2>ENGAGEMENT MODULE</h2>
             <p style="color: #00f0ff; margin-bottom: 20px;">Select Player Configuration</p>
+            
+            <div class="player-count-btns" style="display: flex; gap: 10px; margin-bottom: 30px; justify-content: center;">
+                <button class="btn-cyber pc-btn pc-selected" id="ludo-pc-2" onclick="setLudoPlayers(2)" style="flex:1;">2P</button>
+                <button class="btn-cyber pc-btn" id="ludo-pc-3" onclick="setLudoPlayers(3)" style="flex:1;">3P</button>
+                <button class="btn-cyber pc-btn" id="ludo-pc-4" onclick="setLudoPlayers(4)" style="flex:1;">4P</button>
+            </div>
+
             <div class="mode-buttons">
                 <button class="btn-cyber" onclick="setMode('pvp')">MULTIPLAYER (PASS & PLAY)</button>
                 <button class="btn-cyber" onclick="setMode('pve')">PLAYER VS CPU</button>
@@ -385,7 +397,7 @@
                 </div>
 
                 <!-- BLUE -->
-                <div class="player-panel" id="panel-blue" style="margin-top: 50px;">
+                <div class="player-panel" id="panel-blue">
                     <img src="https://api.dicebear.com/7.x/identicon/svg?seed=BlueBot&backgroundColor=00f0ff" class="avatar-img" style="border-color: var(--cyber-primary);">
                     <span class="player-name" style="color: var(--cyber-primary);" id="blue-name">Blue</span>
                     
@@ -426,7 +438,7 @@
                 </div>
 
                 <!-- YELLOW -->
-                <div class="player-panel" id="panel-yellow" style="margin-top: 50px;">
+                <div class="player-panel" id="panel-yellow">
                     <img src="https://api.dicebear.com/7.x/identicon/svg?seed=YellowBot&backgroundColor=fcee0a" class="avatar-img" style="border-color: var(--cyber-accent);">
                     <span class="player-name" style="color: var(--cyber-accent);" id="yellow-name">Yellow</span>
                     
@@ -452,5 +464,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{% static 'js/games/ludo.js' %}"></script>
+<script src="{% static 'js/games/ludo.js' %}?v={{ request.resolver_match.view_name|default:'2' }}"></script>
 {% endblock %}

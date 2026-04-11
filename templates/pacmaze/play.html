@@ -54,14 +54,7 @@
     animation: titleFlicker 5s ease-in-out infinite;
 }
 
-#title-glitch {
-    position: absolute;
-    left: 0;
-    top: 0;
-    color: #ff3333;
-    animation: glitch 7s infinite;
-    opacity: 0;
-}
+
 
 @keyframes titleFlicker {
     0%, 95%, 100% { text-shadow: 0 0 18px #FFD70088, 0 0 40px #FFD70033; opacity: 1 }
@@ -70,13 +63,7 @@
     98.5% { opacity: .65 }
 }
 
-@keyframes glitch {
-    0%, 87%, 100% { opacity: 0; transform: none }
-    88% { opacity: .85; transform: translateX(-4px) }
-    89% { opacity: 0 }
-    90% { opacity: .7; transform: translateX(4px) skewX(-2deg) }
-    91% { opacity: 0 }
-}
+
 
 #hud {
     display: flex;
@@ -260,7 +247,7 @@ canvas {
 
 {% block content %}
 <div id="app">
-    <div id="title">PAC-MAN · ANTIGRAVITY<div id="title-glitch">PAC-MAN · ANTIGRAVITY</div></div>
+    <div id="title">PAC-MAN</div>
     <div id="hud">
         <div class="hud-item"><div class="hud-label">SCORE</div><div class="hud-val" id="score-val">0</div></div>
         <div class="hud-item"><div class="hud-label">BEST</div><div class="hud-val" id="hi-val">0</div></div>
@@ -303,13 +290,13 @@ const MAP = [
     "1......11....11....11......1",
     "111111.11111 11 11111.111111",
     "111111.11111 11 11111.111111",
-    "111111.11         11.111111",
-    "111111.11 111011 11.111111",
-    "111111.   1111111   .111111",
-    "       .  1111111  .       ",
-    "111111.   1111111   .111111",
-    "111111.11 1111111 11.111111",
-    "111111.11         11.111111",
+    "111111.11          11.111111",
+    "111111.11 111  111 11.111111",
+    "111111.   1      1   .111111",
+    "       .  1      1  .       ",
+    "111111.   1      1   .111111",
+    "111111.11 11111111 11.111111",
+    "111111.11          11.111111",
     "111111.11 11111111 11.111111",
     "111111.11 11111111 11.111111",
     "1............11............1",
@@ -371,7 +358,7 @@ function submitScore(finalScore) {
 }
 
 // ─── COLLISION ───────────────────────────────────────────────
-function isWall(r, c) { r = Math.round(r); c = ((Math.round(c) % COLS) + COLS) % COLS; if (r < 0 || r >= ROWS) return false; return maze[r] && maze[r][c] === 1; }
+function isWall(r, c) { r = Math.round(r); c = ((Math.round(c) % COLS) + COLS) % COLS; if (r < 0 || r >= ROWS) return true; return maze[r] && maze[r][c] === 1; }
 function canMove(x, y, dx, dy) { return !isWall(y + dy * .55, x + dx * .55); }
 
 // ─── PARTICLES ───────────────────────────────────────────────
@@ -406,7 +393,16 @@ function update(dt) {
     const s = dt / (1000 / 60);
     if (pac.spawnAnim > 0) { pac.spawnAnim--; pac.scale = 1 - pac.spawnAnim / 30; return; }
     if (gravityFlipped && pac.ndx === 0 && pac.ndy === 0 && pac.dx === 0 && pac.dy === 0 && canMove(pac.x, pac.y, 0, -1)) pac.ndy = -1;
-    if (canMove(pac.x, pac.y, pac.ndx, pac.ndy)) { pac.dx = pac.ndx; pac.dy = pac.ndy; }
+    
+    // Axis transition snapping
+    if ((pac.ndx !== 0 || pac.ndy !== 0) && (pac.ndx !== pac.dx || pac.ndy !== pac.dy)) {
+        if (canMove(pac.x, pac.y, pac.ndx, pac.ndy)) {
+            if (pac.ndx !== 0 && pac.dx === 0) pac.y = Math.round(pac.y);
+            if (pac.ndy !== 0 && pac.dy === 0) pac.x = Math.round(pac.x);
+            pac.dx = pac.ndx; pac.dy = pac.ndy;
+        }
+    }
+    
     const spd = PAC_SPEED * s * .1;
     if (canMove(pac.x, pac.y, pac.dx, pac.dy)) {
         pac.x += pac.dx * spd; pac.y += pac.dy * spd;
@@ -428,17 +424,60 @@ function update(dt) {
 }
 
 function moveGhost(g, s) {
-    const spd = 1.4 * s * .1, cx = Math.round(g.x), cy = Math.round(g.y), atC = Math.abs(g.x - cx) < .18 && Math.abs(g.y - cy) < .18;
-    if (atC && Math.random() < .35) {
-        const dirs = [{ dx: 0, dy: -1 }, { dx: 0, dy: 1 }, { dx: -1, dy: 0 }, { dx: 1, dy: 0 }], opp = { dx: -g.dx, dy: -g.dy };
-        let valid = dirs.filter(d => !(d.dx === opp.dx && d.dy === opp.dy) && canMove(g.x, g.y, d.dx, d.dy));
-        if (!valid.length) valid = [opp];
-        if (g.mode === 'frightened') { const d = valid[Math.floor(Math.random() * valid.length)]; g.dx = d.dx; g.dy = d.dy; }
-        else { const tx = g.mode === 'scatter' ? g.scatterX : pac.x, ty = g.mode === 'scatter' ? g.scatterY : pac.y; valid.sort((a, b) => (g.x + a.dx - tx) ** 2 + (g.y + a.dy - ty) ** 2 - ((g.x + b.dx - tx) ** 2 + (g.y + b.dy - ty) ** 2)); g.dx = valid[0].dx; g.dy = valid[0].dy; }
+    const spd = 1.4 * s * 0.1;
+    let cx = Math.round(g.x);
+    let cy = Math.round(g.y);
+    let fx = g.x - cx;
+    let fy = g.y - cy;
+    let isCentered = (Math.abs(fx) <= Math.max(0.05, spd) && Math.abs(fy) <= Math.max(0.05, spd));
+
+    // Kickstarter
+    if (g.dx === 0 && g.dy === 0) {
+        g.dx = (cx > COLS/2) ? -1 : 1;
+        isCentered = true;
     }
-    if (canMove(g.x, g.y, g.dx, g.dy)) { g.x += g.dx * spd; g.y += g.dy * spd; g.x = ((g.x % COLS) + COLS) % COLS; g.y = Math.max(.5, Math.min(ROWS - 1.5, g.y)); }
-    else { const dirs = [{ dx: 0, dy: -1 }, { dx: 0, dy: 1 }, { dx: -1, dy: 0 }, { dx: 1, dy: 0 }], o = dirs.filter(d => canMove(g.x, g.y, d.dx, d.dy)); if (o.length) { g.dx = o[0].dx; g.dy = o[0].dy; } }
-    if (gravityFlipped && Math.random() < .012 && canMove(g.x, g.y, 0, -1)) g.dy = -1;
+    
+    if (isCentered && (!g.lastTurn || g.lastTurn.x !== cx || g.lastTurn.y !== cy)) {
+        g.x = cx; g.y = cy; // Snap perfectly
+        g.lastTurn = { x: cx, y: cy };
+        
+        let dirs = [{dx: 0, dy: -1}, {dx: -1, dy: 0}, {dx: 0, dy: 1}, {dx: 1, dy: 0}];
+        if (g.dx !== 0 || g.dy !== 0) dirs = dirs.filter(d => !(d.dx === -g.dx && d.dy === -g.dy));
+        
+        dirs = dirs.filter(d => {
+            let nR = cy + d.dy; let nC = ((cx + d.dx) % COLS + COLS) % COLS;
+            return nR >= 0 && nR < ROWS && maze[nR][nC] !== 1;
+        });
+        
+        if (dirs.length === 0) {
+            g.dx = -g.dx; g.dy = -g.dy;
+        } else {
+            let tx, ty;
+            if (g.mode === 'frightened') {
+                let rd = dirs[Math.floor(Math.random() * dirs.length)];
+                g.dx = rd.dx; g.dy = rd.dy; tx = null;
+            } else {
+                tx = g.mode === 'scatter' ? g.scatterX : pac.x;
+                ty = g.mode === 'scatter' ? g.scatterY : pac.y;
+            }
+            if (tx !== null) {
+                dirs.sort((a, b) => ((cx + a.dx - tx)**2 + (cy + a.dy - ty)**2) - ((cx + b.dx - tx)**2 + (cy + b.dy - ty)**2));
+                g.dx = dirs[0].dx; g.dy = dirs[0].dy;
+            }
+        }
+    }
+    
+    // Safely advance
+    if (canMove(g.x, g.y, g.dx, g.dy)) {
+        g.x += g.dx * spd; g.y += g.dy * spd;
+    } else {
+        g.x = cx; g.y = cy; g.lastTurn = null; // Re-evaluate logic instantly next tick
+    }
+    
+    g.x = ((g.x % COLS) + COLS) % COLS;
+    g.y = Math.max(0.5, Math.min(ROWS - 1.5, g.y));
+    
+    if (gravityFlipped && canMove(g.x, g.y, 0, -1) && Math.random() < 0.05) { g.dy = -1; g.dx = 0; }
     g.eyeX = g.dx; g.eyeY = g.dy;
 }
 
@@ -508,26 +547,47 @@ function drawGravBG(t) {
 }
 
 function drawMaze() {
-    // Fill pass with deep shadow
-    ctx.save(); ctx.shadowColor = '#3333ff'; ctx.shadowBlur = 10;
-    ctx.fillStyle = '#1a1aff';
-    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (maze[r][c] === 1) ctx.fillRect(c * TILE + 1, r * TILE + 1, TILE - 2, TILE - 2);
-    ctx.restore();
-    // Neon edges — only border faces touching corridors
-    ctx.strokeStyle = '#5566ff'; ctx.lineWidth = 1.2;
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.shadowColor = '#00f2ff'; 
+    ctx.shadowBlur = 10;
+    ctx.strokeStyle = '#00f2ff'; 
+    ctx.lineWidth = 1.5;
+    
     for (let r = 0; r < ROWS; r++) {
         for (let c = 0; c < COLS; c++) {
             if (maze[r][c] === 1) {
+                let top = (r > 0 && maze[r - 1][c] === 0);
+                let bot = (r < ROWS - 1 && maze[r + 1][c] === 0);
+                let right = (c < COLS - 1 && maze[r][c + 1] === 0);
+                let left = (c > 0 && maze[r][c - 1] === 0);
+                
+                let px = c * TILE;
+                let py = r * TILE;
+                let pad = 2; // Inset gap
+                
                 ctx.beginPath();
-                if (r > 0 && maze[r - 1][c] === 0) { ctx.moveTo(c * TILE, r * TILE + 1); ctx.lineTo(c * TILE + TILE, r * TILE + 1); }
-                if (r < ROWS - 1 && maze[r + 1][c] === 0) { ctx.moveTo(c * TILE, r * TILE + TILE - 1); ctx.lineTo(c * TILE + TILE, r * TILE + TILE - 1); }
-                if (c < COLS - 1 && maze[r][c + 1] === 0) { ctx.moveTo(c * TILE + TILE - 1, r * TILE); ctx.lineTo(c * TILE + TILE - 1, r * TILE + TILE); }
-                if (c > 0 && maze[r][c - 1] === 0) { ctx.moveTo(c * TILE + 1, r * TILE); ctx.lineTo(c * TILE + 1, r * TILE + TILE); }
+                if (top) { ctx.moveTo(px-1, py+pad); ctx.lineTo(px+TILE+1, py+pad); }
+                if (bot) { ctx.moveTo(px-1, py+TILE-pad); ctx.lineTo(px+TILE+1, py+TILE-pad); }
+                if (left) { ctx.moveTo(px+pad, py-1); ctx.lineTo(px+pad, py+TILE+1); }
+                if (right) { ctx.moveTo(px+TILE-pad, py-1); ctx.lineTo(px+TILE-pad, py+TILE+1); }
                 ctx.stroke();
             }
         }
     }
-    ctx.lineWidth = 1;
+    
+    // Fill slightly transparent core
+    ctx.fillStyle = 'rgba(0, 30, 80, 0.6)';
+    ctx.shadowBlur = 0;
+    for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+            if(maze[r][c] === 1) {
+                ctx.fillRect(c * TILE + 2.5, r * TILE + 2.5, TILE - 5, TILE - 5);
+            }
+        }
+    }
+    ctx.restore();
 }
 
 function drawTrails() {
@@ -550,21 +610,21 @@ function drawShockwaves() {
 }
 
 function drawDots(t) {
-    ctx.save(); ctx.fillStyle = '#FFB8AE'; ctx.shadowColor = '#FFB8AE'; ctx.shadowBlur = 5;
-    dots.forEach(d => { if (!d.eaten) { ctx.beginPath(); ctx.arc(d.c * TILE + TILE / 2, d.r * TILE + TILE / 2, 2.2, 0, Math.PI * 2); ctx.fill(); } });
+    ctx.save(); ctx.fillStyle = '#fcee0a'; ctx.shadowColor = '#fcee0a'; ctx.shadowBlur = 6;
+    dots.forEach(d => { if (!d.eaten) { ctx.beginPath(); ctx.arc(d.c * TILE + TILE / 2, d.r * TILE + TILE / 2, 2.8, 0, Math.PI * 2); ctx.fill(); } });
     ctx.restore();
 }
 
 function drawEnergizers(t) {
     energizers.forEach(e => {
         if (!e.eaten) {
-            const pulse = .55 + .45 * Math.sin(t * .005 + e.phase), r2 = 5.5 * pulse;
+            const pulse = .55 + .45 * Math.sin(t * .008 + e.phase), r2 = 6 * pulse;
             ctx.save();
-            ctx.shadowColor = '#FFB8AE'; ctx.shadowBlur = 18 * pulse; ctx.fillStyle = '#FFB8AE';
+            ctx.shadowColor = '#ff003c'; ctx.shadowBlur = 20 * pulse; ctx.fillStyle = '#ff003c';
             ctx.beginPath(); ctx.arc(e.c * TILE + TILE / 2, e.r * TILE + TILE / 2, r2, 0, Math.PI * 2); ctx.fill();
             // Bright core
-            ctx.shadowBlur = 6; ctx.fillStyle = '#ffe8e0';
-            ctx.beginPath(); ctx.arc(e.c * TILE + TILE / 2, e.r * TILE + TILE / 2, r2 * .32, 0, Math.PI * 2); ctx.fill();
+            ctx.shadowBlur = 8; ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.arc(e.c * TILE + TILE / 2, e.r * TILE + TILE / 2, r2 * .4, 0, Math.PI * 2); ctx.fill();
             ctx.restore();
         }
     });

@@ -58,20 +58,52 @@ function getPlayerPath(player) {
     return path;
 }
 
+let ludoPlayerCount = 2; // Default starting UI state is 2P
+window.setLudoPlayers = function(count) {
+    ludoPlayerCount = count;
+    document.querySelectorAll('.pc-btn').forEach(b => b.classList.remove('pc-selected'));
+    document.getElementById(`ludo-pc-${count}`).classList.add('pc-selected');
+}
+
 window.setMode = function(mode) {
     gameMode = mode;
     modalEl.style.display = 'none';
     arenaEl.style.display = 'flex';
     
-    if (gameMode === 'pvp') {
-        document.getElementById('blue-name').innerText = 'Player 2 (Human)';
-        document.getElementById('green-name').innerText = 'Player 3 (Human)';
-        document.getElementById('yellow-name').innerText = 'Player 4 (Human)';
+    if (ludoPlayerCount === 2) {
+        players = ['RED', 'YELLOW'];
+    } else if (ludoPlayerCount === 3) {
+        players = ['RED', 'GREEN', 'YELLOW'];
     } else {
-        document.getElementById('blue-name').innerText = 'Blue Bot (CPU)';
-        document.getElementById('green-name').innerText = 'Green Bot (CPU)';
-        document.getElementById('yellow-name').innerText = 'Yellow Bot (CPU)';
+        players = ['RED', 'GREEN', 'YELLOW', 'BLUE'];
     }
+    
+    ['RED', 'GREEN', 'YELLOW', 'BLUE'].forEach(c => {
+        let panel = document.getElementById(`panel-${c.toLowerCase()}`);
+        if(players.includes(c)) {
+            panel.style.display = 'flex';
+        } else {
+            panel.style.display = 'none';
+        }
+    });
+
+    if (gameMode === 'pvp') {
+        let humanNames = ['Player 1', 'Player 2 (Human)', 'Player 3 (Human)', 'Player 4 (Human)'];
+        players.forEach((p, idx) => {
+            if(p !== 'RED') {
+                document.getElementById(`${p.toLowerCase()}-name`).innerText = humanNames[idx];
+            }
+        });
+    } else {
+        ['BLUE', 'YELLOW', 'GREEN'].forEach(c => {
+           if(players.includes(c)) {
+               document.getElementById(`${c.toLowerCase()}-name`).innerText = `${c.charAt(0) + c.slice(1).toLowerCase()} CPU`;
+           }
+        });
+    }
+
+    currentTurn = players[0];
+    playerIndex = 0;
 
     init();
     setTimeout(renderPawns, 200);
@@ -378,7 +410,7 @@ async function botMovePawn(color, idx) {
 }
 
 function switchTurn() {
-    playerIndex = (playerIndex + 1) % 4;
+    playerIndex = (playerIndex + 1) % players.length;
     currentTurn = players[playerIndex];
     canRoll = true;
     updateTurnDisplay();
