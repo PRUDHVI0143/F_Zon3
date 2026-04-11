@@ -1,5 +1,5 @@
-const gridContainer = document.getElementById('gridMines');
-const mineCountEl = document.getElementById('mine-count');
+let gridContainer;
+let mineCountEl;
 let board = [];
 let mines = [];
 let revealed = [];
@@ -7,6 +7,9 @@ let flagged = [];
 let gameOver = false;
 
 function init() {
+    gridContainer = document.getElementById('gridMines');
+    mineCountEl = document.getElementById('mine-count');
+    if (!gridContainer) return;
     gridContainer.innerHTML = '';
     board = Array(100).fill(0);
     mines = [];
@@ -96,8 +99,19 @@ function getNeighbors(i) {
 
 window.resetGame = () => init();
 
-document.getElementById('ins-btn').onclick = () => {
-    window.showInstruction('Minesweeper Rules', 'Left click to reveal. Right click to flag. Find all safe cells to win.');
+const startApp = () => {
+    init();
+    
+    const insBtn = document.getElementById('ins-btn');
+    if (insBtn) {
+        insBtn.onclick = () => {
+            window.showInstruction('Minesweeper Rules', 'Left click to reveal. Right click to flag. Find all safe cells to win.');
+        };
+    }
 };
 
-init();
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startApp);
+} else {
+    startApp();
+}

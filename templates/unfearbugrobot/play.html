@@ -45,10 +45,17 @@
                     linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
         background-size: 100% 4px, 3px 100%;
         z-index: 100;
+        mix-blend-mode: overlay;
     }
 
-    /* READY SCREEN */
+    /* PREMIUM SCREENS */
     #start-screen {
+        background: radial-gradient(circle at center, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.98) 80%),
+                    url("{% static 'img/bug_bg.png' %}") no-repeat center center;
+        background-size: cover;
+    }
+
+    .overlay-screen {
         position: absolute;
         width: 100%;
         height: 100%;
@@ -57,7 +64,26 @@
         align-items: center;
         justify-content: center;
         z-index: 50;
-        background: rgba(0,0,0,0.8);
+        background: radial-gradient(circle at center, rgba(0, 240, 255, 0.05) 0%, rgba(0, 0, 0, 0.95) 80%);
+        overflow: hidden;
+    }
+    
+    .start-bg-grid {
+        position: absolute;
+        top: 30%; left: -50%; width: 200%; height: 200%;
+        background-image: 
+            linear-gradient(rgba(0, 240, 255, 0.3) 2px, transparent 2px),
+            linear-gradient(90deg, rgba(0, 240, 255, 0.3) 2px, transparent 2px);
+        background-size: 60px 60px;
+        transform: perspective(600px) rotateX(75deg);
+        animation: grid-move 3s linear infinite;
+        opacity: 0.2;
+        z-index: -1;
+    }
+
+    @keyframes grid-move {
+        0% { background-position: 0 0; }
+        100% { background-position: 0 60px; }
     }
 
     .ready-title {
@@ -65,9 +91,10 @@
         font-weight: 900;
         color: #fff;
         letter-spacing: 20px;
-        text-shadow: 0 0 30px var(--unfear-cyan);
+        text-shadow: 0 0 30px var(--unfear-cyan), 0 0 60px var(--unfear-cyan);
         margin: 0;
         animation: pulse 2s infinite;
+        text-align: center;
     }
 
     .mission-sub {
@@ -76,17 +103,25 @@
         letter-spacing: 10px;
         margin-bottom: 40px;
         text-transform: uppercase;
+        text-align: center;
+        text-shadow: 0 0 15px var(--unfear-pink);
     }
 
     @keyframes pulse {
         0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.8; transform: scale(1.05); }
+        50% { opacity: 0.8; transform: scale(1.02); }
     }
 
     .menu-options {
         display: flex;
         gap: 40px;
         margin-bottom: 60px;
+        position: relative;
+        z-index: 10;
+        background: rgba(0,0,0,0.7);
+        padding: 20px 40px;
+        border: 1px solid rgba(0, 240, 255, 0.2);
+        box-shadow: 0 0 30px rgba(0, 240, 255, 0.1);
     }
 
     .option-box {
@@ -98,35 +133,48 @@
         color: #888;
         margin-bottom: 10px;
         text-transform: uppercase;
+        letter-spacing: 2px;
     }
 
     select {
-        background: #000;
+        background: transparent;
         color: var(--unfear-cyan);
-        border: 2px solid var(--unfear-cyan);
-        padding: 10px 20px;
+        border: NONE;
+        border-bottom: 2px solid var(--unfear-cyan);
+        padding: 10px;
         font-family: inherit;
-        font-size: 1.2rem;
+        font-size: 1.5rem;
         cursor: pointer;
         text-transform: uppercase;
+        outline: none;
+    }
+    
+    select option {
+        background: #000;
+        color: var(--unfear-cyan);
     }
 
     .init-btn {
-        background: transparent;
+        background: rgba(0, 240, 255, 0.05);
         border: 2px solid var(--unfear-cyan);
         color: var(--unfear-cyan);
-        padding: 15px 50px;
-        font-size: 1.2rem;
-        font-weight: bold;
+        padding: 20px 80px;
+        font-size: 1.5rem;
+        font-weight: 900;
         cursor: pointer;
-        transition: 0.3s;
-        letter-spacing: 3px;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        text-transform: uppercase;
+        letter-spacing: 5px;
+        box-shadow: 0 0 15px rgba(0, 240, 255, 0.2), inset 0 0 10px rgba(0, 240, 255, 0.1);
+        clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%);
+        z-index: 10;
     }
 
     .init-btn:hover {
         background: var(--unfear-cyan);
         color: #000;
-        box-shadow: 0 0 30px var(--unfear-cyan);
+        box-shadow: 0 0 40px var(--unfear-cyan);
+        transform: scale(1.05);
     }
 
     /* HUD */
@@ -137,7 +185,7 @@
         text-align: right;
     }
 
-    .hud-label { font-size: 0.7rem; color: #888; margin-bottom: 5px; }
+    .hud-label { font-size: 0.7rem; color: #888; margin-bottom: 5px; letter-spacing: 2px; }
     .hud-value { font-size: 2.5rem; font-weight: 900; color: var(--unfear-cyan); text-shadow: 0 0 10px var(--unfear-cyan); }
 
 </style>
@@ -148,49 +196,58 @@
     <div class="retro-overlay"></div>
     
     <!-- START SCREEN -->
-    <div id="start-screen">
-        <p class="ready-title">READY</p>
-        <p class="mission-sub">PROTECT_THE_FZON3_CORE</p>
+    <div id="start-screen" class="overlay-screen">
+        <div class="start-bg-grid"></div>
+        <p class="ready-title">UNFEAR_BUG</p>
+        <p class="mission-sub">ROBOTIC_DEFENSE_SIMULATION</p>
 
         <div class="menu-options">
             <div class="option-box">
                 <div class="option-label">Difficulty_Level</div>
                 <select id="diff-level">
-                    <option>Normal</option>
-                    <option>Hard</option>
-                    <option>Nightmare</option>
+                    <option value="easy">EASY (10 LIVES)</option>
+                    <option value="normal" selected>NORMAL (5 LIVES)</option>
+                    <option value="hard">HARD (1 LIFE)</option>
                 </select>
             </div>
             <div class="option-box">
-                <div class="option-label">Sector_Select</div>
-                <select id="sector-select">
-                    <option>Sector 1</option>
-                    <option>Sector 2</option>
-                    <option>Sector 3</option>
+                <div class="option-label">Sector_Override</div>
+                <select id="start-sector">
+                    <!-- Populated by JS -->
                 </select>
             </div>
         </div>
 
-        <button class="init-btn" id="init-btn">INITIALIZE_SIMULATION</button>
+        <button class="init-btn" id="init-btn">INITIALIZE</button>
+    </div>
+
+    <!-- END SCREEN (TRY AGAIN) -->
+    <div id="end-screen" class="overlay-screen" style="display: none;">
+        <div class="start-bg-grid" id="end-bg-grid" style="animation-direction: reverse;"></div>
+        <p class="ready-title" id="end-title" style="color: #ff00ff; text-shadow: 0 0 30px #ff00ff;">SYSTEM HALT</p>
+        <p class="mission-sub" id="end-score" style="color: #fcee0a; text-shadow: 0 0 15px #fcee0a; font-size: 2rem;">FINAL SCORE: 0</p>
+        <button class="init-btn" id="retry-btn" style="border-color: #ff00ff; color: #ff00ff; box-shadow: 0 0 15px rgba(255, 0, 255, 0.2);">REBOOT SYSTEM</button>
     </div>
 
     <!-- HUD -->
     <div class="hud">
-        <div class="hud-label">SIM_COHERENCE (VIT)</div>
-        <div id="health-bar" style="width: 250px; height: 10px; background: rgba(255,0,0,0.3); border: 1px solid #ff00ff; margin-bottom: 30px;">
-            <div id="health-fill" style="width: 100%; height: 100%; background: #ff00ff; box-shadow: 0 0 15px #ff00ff;"></div>
-        </div>
+        <div class="hud-label">LIVES</div>
+        <div class="hud-value" id="lives-val" style="margin-bottom: 20px; color: #ff00ff; text-shadow: 0 0 10px #ff00ff;">05</div>
         
-        <div class="hud-label">ENERGY_CORES</div>
-        <div class="hud-value" id="score-val">000000</div>
+        <div class="hud-label">SCORE</div>
+        <div class="hud-value" id="score-val" style="margin-bottom: 20px;">000000</div>
+
+        <div class="hud-label">SECTOR</div>
+        <div class="hud-value" id="sector-val" style="margin-bottom: 20px; font-size: 1.5rem; color: #fcee0a; text-shadow: 0 0 5px #fcee0a;">01/20</div>
         
-        <div class="hud-label" style="margin-top: 30px;">SECTOR_ACTIVE: 01</div>
+        <div class="hud-label">SIM_TIME</div>
+        <div class="hud-value" id="time-val" style="font-size: 1.5rem;">0s</div>
     </div>
 
-    <canvas id="gameCanvas"></canvas>
+    <canvas id="gameCanvas" width="900" height="700"></canvas>
     
     <div style="position: absolute; bottom: 20px; left: 40px; font-size: 0.8rem; color: #444; letter-spacing: 2px;">
-        PLAYER_READY // [MOUSE] AIM & FIRE // [WASD] MANEUVER
+        PLAYER_READY // [SPACE] DOUBLE JUMP // [WASD] MANEUVER
     </div>
 </div>
 {% endblock %}
@@ -201,125 +258,880 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const startScreen = document.getElementById('start-screen');
-        const initBtn = document.getElementById('init-btn');
+        const endScreen = document.getElementById('end-screen');
         
-        let W, H;
-        let player, enemies = [], bullets = [], particles = [];
-        let score = 0, health = 100, frame = 0;
+        const initBtn = document.getElementById('init-btn');
+        const retryBtn = document.getElementById('retry-btn');
+        const diffSelect = document.getElementById('diff-level');
+        const sectorSelect = document.getElementById('start-sector');
+
+        // Populate levels dynamically
+        for (let i = 1; i <= 20; i++) {
+            let opt = document.createElement('option');
+            opt.value = i;
+            opt.innerText = 'SECTOR ' + i.toString().padStart(2, '0');
+            sectorSelect.appendChild(opt);
+        }
+        
         let gameActive = false;
+        let score = 0;
+        let lives = 5;
+        let levelTime = 0;
+        let frame = 0;
+        let currentLevelIndex = 0;
+        let gameState = 'ready'; // ready, playing, gameover, victory
 
-        function resize() {
-            W = canvas.width = window.innerWidth;
-            H = canvas.height = window.innerHeight;
+        // Settings based on difficulty
+        let diffMultiplierDisappear = 15;
+        let enemySpeedMult = 1;
+
+        // Player
+        const player = {
+            x: 50,
+            y: 500,
+            w: 20,
+            h: 30,
+            vy: 0,
+            vx: 0,
+            jumpsPerformed: 0,
+            speed: 1.5, // Acceleration
+            maxSpeed: 8,
+            jumpPower: 14,
+            gravity: 0.55
+        };
+        let jumpBufferTimer = 0;
+
+        let platforms = [];
+        let enemies = [];
+        let hazards = [];
+        let coins = [];
+        let goalObj = {x: 0, y: 0, w: 50, h: 50};
+
+        const levelMaps = [
+  // 1
+  [
+    "                  ",
+    "       C          ",
+    "                  ",
+    "                  ",
+    "                  ",
+    "  C               ",
+    "                 G",
+    "               XXX",
+    "                  ",
+    "        C         ",
+    "      XXXXX       ",
+    "                  ",
+    "P  XXX            ",
+    "XXX               "
+  ],
+  // 2
+  [
+    "                  ",
+    "                  ",
+    "          C       ",
+    "                  ",
+    "                  ",
+    "                 G",
+    "                XX",
+    "                  ",
+    "   C       XXXX   ",
+    "                  ",
+    "       XXXX       ",
+    "                  ",
+    "P  XXXX           ",
+    "XXX               "
+  ],
+  // 3 (Bounce intro)
+  [
+    "                  ",
+    "                  ",
+    "             C    ",
+    "                 G",
+    "                XX",
+    "        C         ",
+    "                  ",
+    "                  ",
+    "                  ",
+    "            X     ",
+    "    C             ",
+    "      XXXX B      ",
+    "P  XXX            ",
+    "XXX               "
+  ],
+  // 4 (Disappear intro)
+  [
+    "        C         ",
+    "                  ",
+    "   C              ",
+    "                 G",
+    "                XX",
+    "                  ",
+    "                  ",
+    "         X    C   ",
+    "                  ",
+    "       DD         ",
+    "                  ",
+    "    DDD           ",
+    "P DX              ",
+    "XX                "
+  ],
+  // 5 (Enemy intro)
+  [
+    "                  ",
+    "                  ",
+    "             C    ",
+    "                 G",
+    "                XX",
+    "                  ",
+    "           XXXXX  ",
+    "           E      ",
+    "        DD        ",
+    "     C            ",
+    "     DDD          ",
+    "P   D             ",
+    "XXXX              ",
+    "                  "
+  ],
+  // 6 (Spike Intro)
+  [
+    "                  ",
+    "          C       ",
+    "                 G",
+    "                XX",
+    "                  ",
+    "   F              ",
+    "             XXXX ",
+    "             H    ",
+    "         BBXX     ",
+    "      C           ",
+    "    XXXXX         ",
+    "    H  E          ",
+    "P XX              ",
+    "XX                "
+  ],
+  // 7 (Moving)
+  [
+    "                  ",
+    "                 G",
+    "                XX",
+    "         C        ",
+    "                  ",
+    "            D D D ",
+    "   C              ",
+    "        XXX       ",
+    "        E         ",
+    "    XXXX          ",
+    "    E             ",
+    "P XX              ",
+    "XX                ",
+    "                  "
+  ],
+  // 8 (Bounce precision)
+  [
+    "          C       ",
+    "                 G",
+    "                XX",
+    "                  ",
+    "           B      ",
+    "   F              ",
+    "         B        ",
+    "                  ",
+    "       B          ",
+    "   C              ",
+    "     B            ",
+    "   B              ",
+    "P B               ",
+    "XX                "
+  ],
+  // 9 (Mix 1)
+  [
+    "                 G",
+    "                  ",
+    "      F          X",
+    "                  ",
+    "               D  ",
+    "             D    ",
+    "           X      ",
+    "         B        ",
+    "     XXXH     C   ",
+    "     E            ",
+    "  XXX             ",
+    "  H               ",
+    "P X      C        ",
+    "XX                "
+  ],
+  // 10 (Maze 1)
+  [
+    "         C     X G",
+    "               X X",
+    "XXXXXXXXX      X X",
+    "        X      X  ",
+    "  E     X      B  ",
+    "  XXXXXXX         ",
+    "  X          C    ",
+    "  X      XXXXXX   ",
+    "  X      E    X   ",
+    "  X      XXXX X   ",
+    "  X   E     X X   ",
+    "  XXXXXXX   X X   ",
+    "P H H H X   H X   ",
+    "XXXXXXXXXXXXXXX   "
+  ],
+  // 11
+  [
+    "  C              G",
+    "                 X",
+    "                X ",
+    "   F           D  ",
+    "              D   ",
+    "   C         D    ",
+    "            D     ",
+    "           X      ",
+    "    F             ",
+    "      XXXXX       ",
+    "      H E         ",
+    "   BXH            ",
+    "P X               ",
+    "XX                "
+  ],
+  // 12
+  [
+    "                  ",
+    "        C         ",
+    "                 G",
+    "                 X",
+    "            XXXX  ",
+    "            H  X  ",
+    "         XXXX  X  ",
+    "   C     E     X  ",
+    "      XXXXX    X  ",
+    "      H        X  ",
+    "   BBXX        X  ",
+    "               X  ",
+    "P X          E X  ",
+    "XXXXXXXXXXXXXXXX  "
+  ],
+  // 13 (Neon Tower)
+  [
+    "G                 ",
+    "XX    H    C   XX ",
+    "                  ",
+    "       BB         ",
+    "            F     ",
+    "    XX            ",
+    "           D D    ",
+    "   C              ",
+    "  XXX      X      ",
+    "       F          ",
+    "         B        ",
+    "                  ",
+    "P   E          C  ",
+    "XXXXXXX   XXXXXXXX"
+  ],
+  // 14
+  [
+    "                  ",
+    "                 G",
+    "                 X",
+    "     C          X ",
+    "   XXXX        D  ",
+    "P  H E X      D   ",
+    "XXX    X     D    ",
+    "       X    X     ",
+    "       X   B      ",
+    "       X BB       ",
+    "       XB   C     ",
+    "       X          ",
+    "                  ",
+    "                  "
+  ],
+  // 15
+  [
+    "                 G",
+    "                XX",
+    "P        F        ",
+    "XXX               ",
+    "   XX    XX    XX ",
+    "   HE C  HE C  HE ",
+    "  BBX   BBX   BBX ",
+    "                  ",
+    "                  ",
+    "                  ",
+    "                  ",
+    "                  ",
+    "                  ",
+    "                  "
+  ],
+  // 16
+  [
+    "G  C              ",
+    "XX               P",
+    "               XXX",
+    "             DDD  ",
+    "           DDD    ",
+    "         DDD      ",
+    "       DDD        ",
+    "     DDD          ",
+    "   DDD            ",
+    " DDD              ",
+    "DX                ",
+    "H                 ",
+    "                  ",
+    "                  "
+  ],
+  // 17
+  [
+    "X  C             G",
+    "X                X",
+    "X E  B   H   D   X",
+    "XXX XXX XXX XXX  X",
+    "P                X",
+    "XX      F       XX",
+    "                 X",
+    "                 X",
+    "         BB B B BB",
+    "   C              ",
+    "   XXE E  XXX     ",
+    "   XXXXXX HHX     ",
+    "          X X     ",
+    "          X X     "
+  ],
+  // 18
+  [
+    "   F         C    ",
+    "G                 ",
+    "XX            B P ",
+    "   BXXXXXXHHX   XX",
+    "               B  ",
+    "   BXXXXXXXX   X  ",
+    "               H  ",
+    "   BXXXXX      E  ",
+    "            XXXXX ",
+    "   BXXXX          ",
+    "  C               ",
+    "   B              ",
+    "                  ",
+    "                  "
+  ],
+  // 19
+  [
+    "G     F           ",
+    "X  E        E    P",
+    "XXXXXXXXXXXXXXXXXX",
+    "               H X",
+    "XXXXXXXXXXXXXXXX X",
+    "X H              X",
+    "X XXXXXXXXXXXXXXXX",
+    "X              H X",
+    "XXXXXXXXXXXXXXXX X",
+    "X H      C       X",
+    "X XXXXXXXX XXXXXXX",
+    "X                X",
+    "B      E   E     X",
+    "XXXXXXXXXXXXXXXXXX"
+  ],
+  // 20
+  [
+    "                 G",
+    "   C             X",
+    " B  B  B  B  B   X",
+    " D  D  D  D  D   X",
+    "                 X",
+    " XH XH XH XH XH BX",
+    "  F      C       X",
+    " XE XE XE XE XE  X",
+    "                 X",
+    " XD XD XD XD XD  X",
+    "                 X",
+    "P                X",
+    "XXHHHHHHHHHHHHHHXX",
+    "XXXXXXXXXXXXXXXXXX"
+  ]
+        ];
+
+        function applyDifficulty() {
+            let d = diffSelect.value;
+            if (d === 'easy') {
+                lives = 10;
+                enemySpeedMult = 0.5;
+                diffMultiplierDisappear = 45; 
+            } else if (d === 'hard') {
+                lives = 1;
+                enemySpeedMult = 1.5;
+                diffMultiplierDisappear = 10;
+            } else {
+                lives = 5;
+                enemySpeedMult = 1;
+                diffMultiplierDisappear = 25;
+            }
         }
 
-        class Bullet {
-            constructor(x, y, angle) {
-                this.x = x; this.y = y;
-                this.vx = Math.cos(angle) * 15;
-                this.vy = Math.sin(angle) * 15;
-            }
-            update() { this.x += this.vx; this.y += this.vy; }
-            draw() {
-                ctx.fillStyle = '#00f0ff';
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = '#00f0ff';
-                ctx.fillRect(this.x-2, this.y-2, 4, 15);
-                ctx.shadowBlur = 0;
-            }
-        }
+        function parseLevel() {
+            let grid = levelMaps[currentLevelIndex];
+            platforms = [];
+            enemies = [];
+            hazards = [];
+            coins = [];
+            
+            for (let r = 0; r < 14; r++) {
+                for (let c = 0; c < 18; c++) {
+                    let char = grid[r][c];
+                    let x = c * 50;
+                    let y = r * 50;
 
-        class Enemy {
-            constructor() {
-                this.x = Math.random() * W;
-                this.y = -50;
-                this.size = 40;
-                this.speed = 2 + Math.random() * 3;
-            }
-            update() { this.y += this.speed; }
-            draw() {
-                ctx.strokeStyle = '#ff00ff';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(this.x, this.y, this.size, this.size);
-                // Inner diamond
-                ctx.beginPath();
-                ctx.moveTo(this.x + 20, this.y + 5);
-                ctx.lineTo(this.x + 35, this.y + 20);
-                ctx.lineTo(this.x + 20, this.y + 35);
-                ctx.lineTo(this.x + 5, this.y + 20);
-                ctx.closePath();
-                ctx.stroke();
+                    if (char === 'X') platforms.push({x: x, y: y, w: 50, h: 50, type: 'normal', visible: true, timer: 0});
+                    else if (char === 'B') platforms.push({x: x, y: y, w: 50, h: 50, type: 'bounce', visible: true, timer: 0});
+                    else if (char === 'D') platforms.push({x: x, y: y, w: 50, h: 50, type: 'disappear', visible: true, timer: 0});
+                    else if (char === 'P') {
+                        player.x = x + 15;
+                        player.y = y + 20;
+                        player.vx = 0;
+                        player.vy = 0;
+                        player.jumpsPerformed = 0;
+                    } else if (char === 'G') {
+                        goalObj = {x: x, y: y, w: 50, h: 50};
+                    } else if (char === 'E') {
+                        enemies.push({x: x, y: y + 25, w: 25, h: 25, vx: enemySpeedMult * 2, vy: 0, minX: x - 50, maxX: x + 100, type: 'walker'});
+                    } else if (char === 'F') {
+                        enemies.push({x: x, y: y, w: 25, h: 25, vx: 0, vy: enemySpeedMult * 2, minY: y - 50, maxY: y + 100, type: 'flyer'});
+                    } else if (char === 'C') {
+                        coins.push({x: x + 25, y: y + 25, radius: 10, collected: false, phase: Math.random() * Math.PI});
+                    } else if (char === 'H') {
+                        hazards.push({x: x + 12.5, y: y + 25, w: 25, h: 25});
+                    }
+                }
             }
         }
 
-        function initGame() {
-            resize();
-            gameActive = true;
-            startScreen.style.display = 'none';
-            player = { x: W/2, y: H - 100 };
-            loop();
+        let keys = {};
+        document.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            if ((e.key === ' ' || e.key === 'arrowup') && gameActive && gameState === 'playing') {
+                jumpBufferTimer = 8; // 8 frames of input buffer
+                if (player.jumpsPerformed > 0 && player.jumpsPerformed < 2) {
+                    player.vy = -player.jumpPower;
+                    player.jumpsPerformed++;
+                    jumpBufferTimer = 0; // consumed
+                }
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+
+        function updateHUD() {
+            document.getElementById('lives-val').innerText = lives.toString().padStart(2, '0');
+            document.getElementById('score-val').innerText = score.toString().padStart(6, '0');
+            document.getElementById('sector-val').innerText = (currentLevelIndex + 1).toString().padStart(2, '0') + '/20';
+            document.getElementById('time-val').innerText = Math.floor(levelTime / 60) + 's';
         }
 
-        const playerImg = new Image();
-        playerImg.src = "{% static 'images/spacefighter/robot.png' %}";
+        function triggerGameOver(isVictory) {
+            gameActive = false;
+            gameState = isVictory ? 'victory' : 'gameover';
+            
+            endScreen.style.display = 'flex';
+            const title = document.getElementById('end-title');
+            const scoreLabel = document.getElementById('end-score');
+            const btn = document.getElementById('retry-btn');
+            const bgGrid = document.getElementById('end-bg-grid');
+            
+            scoreLabel.innerText = 'FINAL SCORE: ' + score;
+            
+            if (isVictory) {
+                title.innerText = 'CORE EXFILTRATED';
+                title.style.color = 'var(--unfear-cyan)';
+                title.style.textShadow = '0 0 30px var(--unfear-cyan)';
+                btn.innerText = 'PLAY AGAIN';
+                btn.style.borderColor = 'var(--unfear-cyan)';
+                btn.style.color = 'var(--unfear-cyan)';
+                btn.style.boxShadow = '0 0 15px rgba(0, 240, 255, 0.2)';
+                bgGrid.style.backgroundImage = 'linear-gradient(rgba(0, 240, 255, 0.3) 2px, transparent 2px), linear-gradient(90deg, rgba(0, 240, 255, 0.3) 2px, transparent 2px)';
+            } else {
+                title.innerText = 'SYSTEM FAILURE';
+                title.style.color = 'var(--unfear-pink)';
+                title.style.textShadow = '0 0 30px var(--unfear-pink)';
+                btn.innerText = 'REBOOT SYSTEM';
+                btn.style.borderColor = 'var(--unfear-pink)';
+                btn.style.color = 'var(--unfear-pink)';
+                btn.style.boxShadow = '0 0 15px rgba(255, 0, 255, 0.2)';
+                bgGrid.style.backgroundImage = 'linear-gradient(rgba(255, 0, 255, 0.2) 2px, transparent 2px), linear-gradient(90deg, rgba(255, 0, 255, 0.2) 2px, transparent 2px)';
+            }
+            
+            // Re-apply hover colors based on current state using dynamic CSS
+            btn.onmouseover = function() {
+                this.style.background = isVictory ? 'var(--unfear-cyan)' : 'var(--unfear-pink)';
+                this.style.color = '#000';
+            }
+            btn.onmouseout = function() {
+                this.style.background = 'transparent';
+                this.style.color = isVictory ? 'var(--unfear-cyan)' : 'var(--unfear-pink)';
+            }
+        }
 
-        function loop() {
-            if (!gameActive) return;
+        function death() {
+            lives--;
+            if (lives <= 0) {
+                triggerGameOver(false);
+            } else {
+                parseLevel(); // Reload level
+            }
+        }
+
+        function nextLevel() {
+            currentLevelIndex++;
+            if (currentLevelIndex >= levelMaps.length) {
+                triggerGameOver(true);
+            } else {
+                parseLevel();
+            }
+        }
+
+        function update() {
+            if (!gameActive || gameState !== 'playing') return;
+
+            levelTime++;
             frame++;
-            ctx.clearRect(0, 0, W, H);
 
-            // Grid Background
+            // Input buffering
+            if (jumpBufferTimer > 0) jumpBufferTimer--;
+
+            // Player movement
+            player.vx *= 0.82; // Friction
+            if (keys['arrowleft'] || keys['a']) player.vx -= player.speed;
+            if (keys['arrowright'] || keys['d']) player.vx += player.speed;
+            
+            // Limit max speed
+            if (player.vx > player.maxSpeed) player.vx = player.maxSpeed;
+            if (player.vx < -player.maxSpeed) player.vx = -player.maxSpeed;
+
+            // Apply gravity
+            player.vy += player.gravity;
+            if (player.vy > 18) player.vy = 18;
+
+            player.x += player.vx;
+            player.y += player.vy;
+
+            // Boundary check
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.w > canvas.width) player.x = canvas.width - player.w;
+
+            // Platform collisions
+            let onGround = false;
+            for (let p of platforms) {
+                if (!p.visible) continue;
+                if (player.vy > 0 && 
+                    player.y + player.h >= p.y &&
+                    player.y + player.h <= p.y + 30 &&
+                    player.x + player.w > p.x &&
+                    player.x < p.x + p.w) {
+                    
+                    player.vy = 0;
+                    player.y = p.y - player.h;
+                    player.jumpsPerformed = 0; // RESET JUMP ON SOLID TILE
+                    onGround = true;
+                    
+                    if (p.type === 'bounce') {
+                        player.vy = -18;
+                        player.jumpsPerformed = 1; // count bounce as aerial
+                        onGround = false;
+                    }
+                    if (p.type === 'disappear') {
+                        if (p.timer === 0) p.timer = diffMultiplierDisappear;
+                    }
+                }
+            }
+
+            // Execute buffered jump
+            if (onGround && jumpBufferTimer > 0) {
+                player.vy = -player.jumpPower;
+                player.jumpsPerformed = 1;
+                jumpBufferTimer = 0;
+            }
+
+            // Update disappearing platforms
+            for (let p of platforms) {
+                if (p.type === 'disappear' && p.timer > 0) {
+                    p.timer--;
+                    if (p.timer === 0) p.visible = false;
+                }
+            }
+
+            // Enemy collisions & updates
+            for (let e of enemies) {
+                if (player.x < e.x + e.w && player.x + player.w > e.x &&
+                    player.y < e.y + e.h && player.y + player.h > e.y) {
+                    death();
+                    return;
+                }
+                if (e.type === 'walker') {
+                    e.x += e.vx;
+                    if (e.x < e.minX || e.x > e.maxX) e.vx *= -1;
+                } else if (e.type === 'flyer') {
+                    e.y += e.vy;
+                    if (e.y < e.minY || e.y > e.maxY) e.vy *= -1;
+                }
+            }
+
+            // Hazard collisions
+            for (let h of hazards) {
+                if (player.x < h.x + h.w && player.x + player.w > h.x &&
+                    player.y < h.y + h.h && player.y + player.h > h.y) {
+                    death();
+                    return;
+                }
+            }
+            
+            // Coins collision checks (generous hitbox)
+            for (let c of coins) {
+                if (c.collected) continue;
+                let dx = (player.x + player.w / 2) - c.x;
+                let dy = (player.y + player.h / 2) - c.y;
+                let distance = Math.hypot(dx, dy);
+                if (distance < 35) {
+                    c.collected = true;
+                    score += 500; // rewarding bonus
+                }
+            }
+
+            // Fell off map
+            if (player.y > canvas.height) {
+                death();
+                return;
+            }
+
+            // Goal detection
+            if (goalObj && player.x < goalObj.x + goalObj.w && player.x + player.w > goalObj.x &&
+                player.y < goalObj.y + goalObj.h && player.y + player.h > goalObj.y) {
+                score += 5000 + (lives * 1000);
+                nextLevel();
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Level Text Background Watermark
+            if (gameState === 'playing') {
+                ctx.fillStyle = 'rgba(0, 240, 255, 0.05)';
+                ctx.font = 'bold 140px Courier New';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('SECTOR ' + (currentLevelIndex + 1).toString().padStart(2, '0'), canvas.width / 2, canvas.height / 2);
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'alphabetic';
+            }
+
+            // Grid
             ctx.strokeStyle = 'rgba(0, 240, 255, 0.05)';
             ctx.lineWidth = 1;
-            for(let i=0; i<W; i+=50) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke(); }
-            for(let i=0; i<H; i+=50) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(W, i); ctx.stroke(); }
-
-            // Enemies
-            if (frame % 30 === 0) enemies.push(new Enemy());
-            enemies.forEach((e, i) => {
-                e.update(); e.draw();
-                if (e.y > H) { enemies.splice(i, 1); health -= 5; }
-                
-                // Collision with player
-                if (Math.abs(e.x - player.x) < 40 && Math.abs(e.y - player.y) < 40) {
-                    enemies.splice(i, 1); health -= 10;
-                }
-            });
-
-            // Bullets
-            bullets.forEach((b, i) => {
-                b.update(); b.draw();
-                if (b.y < -50) bullets.splice(i, 1);
-
-                enemies.forEach((e, ei) => {
-                    if (b.x > e.x && b.x < e.x + e.size && b.y > e.y && b.y < e.y + e.size) {
-                        enemies.splice(ei, 1);
-                        bullets.splice(i, 1);
-                        score += 500;
-                    }
-                });
-            });
-
-            // Player
-            if (playerImg.complete) {
-                ctx.drawImage(playerImg, player.x - 30, player.y - 30, 60, 60);
-            } else {
-                ctx.fillStyle = '#fff';
-                ctx.fillRect(player.x - 20, player.y - 10, 40, 20);
+            for (let i = 0; i < canvas.width; i += 50) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += 50) {
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
             }
 
-            // HUD
-            document.getElementById('health-fill').style.width = health + '%';
-            document.getElementById('score-val').innerText = score.toString().padStart(6, '0');
+            // Platforms
+            for (let p of platforms) {
+                if (!p.visible) continue;
 
-            if (health <= 0) { gameActive = false; alert('MISSION FAILED'); location.reload(); }
-            else requestAnimationFrame(loop);
+                if (p.type === 'normal') {
+                    ctx.fillStyle = 'rgba(0, 240, 255, 0.2)'; 
+                    ctx.strokeStyle = '#00f0ff';
+                } else if (p.type === 'bounce') {
+                    ctx.fillStyle = 'rgba(252, 238, 10, 0.2)'; 
+                    ctx.strokeStyle = '#fcee0a';
+                } else if (p.type === 'disappear') {
+                    ctx.fillStyle = 'rgba(255, 0, 255, 0.2)'; 
+                    ctx.strokeStyle = '#ff00ff';
+                }
+
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+                ctx.lineWidth = 2;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = ctx.strokeStyle;
+                ctx.strokeRect(p.x, p.y, p.w, p.h);
+                ctx.shadowBlur = 0;
+            }
+
+            // Coins
+            for (let c of coins) {
+                if (c.collected) continue;
+                ctx.beginPath();
+                ctx.arc(c.x, c.y, c.radius + Math.sin(frame * 0.1 + c.phase) * 2, 0, Math.PI * 2);
+                ctx.fillStyle = '#fcee0a';
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#fff';
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#fcee0a';
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+
+            // Bug Enemies
+            for (let e of enemies) {
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.4)';
+                ctx.fillRect(e.x, e.y, e.w, e.h);
+                
+                // Draw animated bug features
+                ctx.strokeStyle = '#ff0000';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                if (e.type === 'walker') {
+                    let legT = (Math.sin(frame * 0.5) * 5); // walking wiggle
+                    ctx.moveTo(e.x, e.y + e.h); ctx.lineTo(e.x - 5, e.y + e.h + legT);
+                    ctx.moveTo(e.x + e.w/2, e.y + e.h); ctx.lineTo(e.x + e.w/2, e.y + e.h - legT);
+                    ctx.moveTo(e.x + e.w, e.y + e.h); ctx.lineTo(e.x + e.w + 5, e.y + e.h + legT);
+                    ctx.moveTo(e.x + 5, e.y); ctx.lineTo(e.x, e.y - 10 + legT); // Antenna
+                    ctx.moveTo(e.x + e.w - 5, e.y); ctx.lineTo(e.x + e.w, e.y - 10 - legT); // Antenna
+                } else if (e.type === 'flyer') {
+                    let wingY = (Math.sin(frame * 0.8) * 15);
+                    ctx.moveTo(e.x, e.y + e.h/2); ctx.lineTo(e.x - 15, e.y + e.h/2 + wingY); // Left wing
+                    ctx.moveTo(e.x + e.w, e.y + e.h/2); ctx.lineTo(e.x + e.w + 15, e.y + e.h/2 - wingY); // Right wing
+                }
+                ctx.stroke();
+
+                // Glowing Bug Eyes
+                ctx.fillStyle = '#fcee0a';
+                ctx.fillRect(e.x + 5, e.y + 5, 5, 5);
+                ctx.fillRect(e.x + 15, e.y + 5, 5, 5);
+                
+                ctx.strokeStyle = '#ff0000';
+                ctx.lineWidth = 2;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#ff0000';
+                ctx.strokeRect(e.x, e.y, e.w, e.h);
+                ctx.shadowBlur = 0;
+            }
+
+            // Hazards
+            for (let h of hazards) {
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+                ctx.beginPath();
+                ctx.moveTo(h.x + h.w / 2, h.y);
+                ctx.lineTo(h.x + h.w, h.y + h.h);
+                ctx.lineTo(h.x, h.y + h.h);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = '#ff0000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            // Goal
+            if (goalObj && goalObj.x !== 0 && goalObj.y !== 0) {
+                ctx.fillStyle = 'rgba(0, 240, 255, 0.3)';
+                ctx.fillRect(goalObj.x, goalObj.y + 40, 50, 10);
+                ctx.fillStyle = 'rgba(252, 238, 10, 0.5)';
+                ctx.fillRect(goalObj.x + 5, goalObj.y, 40, 45);
+                ctx.fillStyle = '#00f0ff';
+                ctx.font = 'bold 16px Courier New';
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#00f0ff';
+                ctx.fillText('CORE', goalObj.x + 5, goalObj.y + 30);
+                ctx.shadowBlur = 0;
+            }
+
+            // Player
+            if (gameState === 'playing') {
+                ctx.fillStyle = 'rgba(255, 0, 255, 0.5)';
+                ctx.fillRect(player.x, player.y, player.w, player.h);
+                
+                // Jetpack visuals if double jumped
+                if (player.jumpsPerformed > 1 && player.vy < 0) {
+                    ctx.fillStyle = '#fcee0a';
+                    ctx.fillRect(player.x + 2, player.y + player.h, 6, 10 + Math.random() * 10);
+                    ctx.fillRect(player.x + 12, player.y + player.h, 6, 10 + Math.random() * 10);
+                }
+
+                ctx.fillStyle = '#00f0ff';
+                ctx.fillRect(player.x + 2, player.y + 2, 6, 8);
+                ctx.fillRect(player.x + 12, player.y + 2, 6, 8);
+                ctx.strokeStyle = '#ff00ff';
+                ctx.lineWidth = 2;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#ff00ff';
+                ctx.strokeRect(player.x, player.y, player.w, player.h);
+                ctx.shadowBlur = 0;
+
+                // Goal Compass Arrow
+                if (goalObj) {
+                    let px = player.x + player.w / 2;
+                    let py = player.y + player.h / 2;
+                    let gx = goalObj.x + 25;
+                    let gy = goalObj.y + 25;
+                    let dist = Math.hypot(gx - px, gy - py);
+
+                    if (dist > 150) { // Only show if goal is more than 3 blocks away
+                        let angle = Math.atan2(gy - py, gx - px);
+                        let indX = px + Math.cos(angle) * 35;
+                        let indY = py + Math.sin(angle) * 35;
+
+                        ctx.save();
+                        ctx.translate(indX, indY);
+                        ctx.rotate(angle);
+                        
+                        ctx.beginPath();
+                        let pulse = Math.sin(frame * 0.15) * 3;
+                        ctx.moveTo(8 + pulse, 0);
+                        ctx.lineTo(-6, 6 + pulse / 2);
+                        ctx.lineTo(-6, -6 - pulse / 2);
+                        ctx.closePath();
+                        
+                        ctx.fillStyle = 'rgba(0, 240, 255, 0.7)';
+                        ctx.fill();
+                        ctx.lineWidth = 1;
+                        ctx.strokeStyle = '#00f0ff';
+                        ctx.shadowBlur = 10;
+                        ctx.shadowColor = '#00f0ff';
+                        ctx.stroke();
+                        
+                        ctx.restore();
+                    }
+                }
+            }
         }
 
-        window.addEventListener('mousemove', (e) => { player.x = e.clientX; });
-        window.addEventListener('mousedown', () => { if(gameActive) bullets.push(new Bullet(player.x, player.y-20, -Math.PI/2)); });
-        initBtn.addEventListener('click', initGame);
-        window.addEventListener('resize', resize);
+        function gameLoop() {
+            if (gameState === 'playing') { 
+                update();
+                updateHUD();
+            }
+            if (gameState === 'playing' || frame === 0) {
+                draw(); // Draw loop only needs to run if playing to save resources after overlay pops
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            score = 0;
+            levelTime = 0;
+            currentLevelIndex = parseInt(sectorSelect.value, 10) - 1;
+            applyDifficulty();
+            parseLevel();
+            gameActive = true;
+            gameState = 'playing';
+            updateHUD();
+        }
+
+        initBtn.addEventListener('click', () => {
+            startScreen.style.display = 'none';
+            startGame();
+        });
+
+        retryBtn.addEventListener('click', () => {
+            endScreen.style.display = 'none';
+            startScreen.style.display = 'flex';
+            // Wait for user to push INITIALIZE again to prevent accidental double clicks and let them re-select difficulty if needed
+        });
+
+        // Initialize background frame
+        draw();
+        requestAnimationFrame(gameLoop);
     })();
 </script>
 {% endblock %}

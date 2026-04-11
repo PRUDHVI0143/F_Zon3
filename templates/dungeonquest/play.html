@@ -3,224 +3,677 @@
 
 {% block extra_css %}
 <style>
-    body {
-        margin: 0;
-        overflow: hidden;
-        background: #000;
-        font-family: 'Courier New', monospace;
+    /* Premium Retro & Cyberpunk UI blend */
+    :root {
+        --zelda-gold: #f5c518;
+        --zelda-bg: #050a14;
+        --glow: rgba(245, 197, 24, 0.4);
     }
 
-    #ui-container {
-        position: absolute;
-        width: 100vw;
-        height: 100vh;
-        pointer-events: none;
-        z-index: 10;
+    body {
+        background: var(--zelda-bg);
         display: flex;
         flex-direction: column;
-    }
-
-    /* TERMINAL LOG */
-    #terminal-overlay {
-        position: absolute;
-        top: 20px;
-        left: 20px;
-        width: 400px;
-        height: 200px;
-        background: rgba(0, 0, 0, 0.8);
-        border: 2px solid #00f0ff;
-        border-radius: 5px;
-        padding: 15px;
-        color: #00f0ff;
-        font-size: 0.9rem;
-        box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
-        opacity: 0;
-        transition: opacity 1s;
-    }
-
-    .log-line {
-        margin-bottom: 8px;
-        border-left: 3px solid #00f0ff;
-        padding-left: 10px;
-    }
-
-    /* MINIMAP */
-    #minimap {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        width: 150px;
-        height: 250px;
-        background: rgba(0, 240, 255, 0.2);
-        border: 2px solid #00f0ff;
-    }
-
-    /* HUD BOTTOM */
-    #hud-bottom {
-        margin-top: auto;
-        padding: 20px;
-        display: flex;
-        gap: 20px;
-    }
-
-    .hud-btn {
-        background: rgba(0, 0, 0, 0.6);
-        border: 1px solid #00f0ff;
-        color: #fff;
-        padding: 10px 20px;
-        pointer-events: auto;
-        cursor: pointer;
-    }
-
-    /* LOADING SCREEN */
-    #loading-screen {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        background: #000;
-        display: flex;
         align-items: center;
         justify-content: center;
+        height: 100vh;
+        overflow: hidden;
+        font-family: 'Space Grotesk', 'Courier New', monospace;
+    }
+
+    #game-container {
+        position: relative;
+        box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        border: 4px solid #111;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    /* CRT SCANLINE EFFECT */
+    #game-container::after {
+        content: " ";
+        display: block;
+        position: absolute;
+        top: 0; left: 0; bottom: 0; right: 0;
+        background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                    linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+        z-index: 10;
+        background-size: 100% 3px, 3px 100%;
+        pointer-events: none;
+        opacity: 0.4;
+    }
+
+    /* VIGNETTE */
+    #vignette {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.6) 100%);
+        pointer-events: none;
+        z-index: 11;
+    }
+
+    #ui {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 576px;
+        background: #0a0b1e;
+        border: 2px solid var(--zelda-gold);
+        border-bottom: none;
+        padding: 10px 20px;
+        box-sizing: border-box;
+        border-radius: 12px 12px 0 0;
+        position: relative;
+        z-index: 20;
+    }
+
+    #hearts { display: flex; gap: 5px; align-items: center; }
+    .h { font-size: 18px; text-shadow: 0 0 10px rgba(255,0,0,0.5); }
+
+    #stats { 
+        color: var(--zelda-gold); 
+        font-size: 11px; 
+        text-align: right; 
+        line-height: 1.5;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    #lbl { 
+        color: #fff; 
+        font-size: 12px; 
+        font-weight: 800;
+        background: rgba(245, 197, 24, 0.2);
+        padding: 4px 12px;
+        border-radius: 20px;
+        border: 1px solid var(--zelda-gold);
+        box-shadow: 0 0 10px var(--glow);
+    }
+
+    canvas {
+        display: block;
+        border: 2px solid var(--zelda-gold);
+        border-top: none;
+        background: #000;
+        cursor: none;
+    }
+
+    #hint {
+        width: 576px;
+        background: #0a0b1e;
+        border: 2px solid var(--zelda-gold);
+        border-top: 1px solid #222;
+        padding: 8px 15px;
+        color: #888;
+        font-size: 10px;
+        display: flex;
+        justify-content: space-between;
+        border-radius: 0 0 12px 12px;
+        box-sizing: border-box;
+    }
+
+    #overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(5, 10, 20, 0.95);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 25px;
         z-index: 100;
+        backdrop-filter: blur(5px);
+    }
+
+    #overlay h1 {
+        color: var(--zelda-gold);
+        font-size: 32px;
+        text-align: center;
+        letter-spacing: 5px;
+        text-shadow: 0 0 20px var(--glow);
+        font-family: 'Space Grotesk', sans-serif;
+    }
+
+    #overlay p {
+        color: #aaa;
+        font-size: 12px;
+        line-height: 1.8;
+        text-align: center;
+        max-width: 400px;
+    }
+
+    .btn-action {
+        background: var(--zelda-gold);
+        color: #000;
+        border: none;
+        padding: 15px 40px;
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 14px;
+        font-weight: 800;
+        cursor: pointer;
+        letter-spacing: 2px;
+        border-radius: 4px;
+        transition: transform 0.2s, background 0.2s;
+        text-transform: uppercase;
+    }
+
+    .btn-action:hover {
+        background: #fff;
+        transform: scale(1.05);
+        box-shadow: 0 0 20px rgba(255,255,255,0.4);
+    }
+
+    /* Scoreboard styles */
+    .score-item { color: var(--zelda-gold); font-size: 24px; font-weight: 900; }
+    
+    #cursor {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--zelda-gold);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 1000;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 0 10px var(--glow);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div id="loading-screen">
-    <div style="color: #00f0ff; font-size: 2rem; letter-spacing: 5px;">INITIALIZING_HYPERSPACE...</div>
-</div>
+<div id="cursor"></div>
 
-<div id="ui-container">
-    <div id="terminal-overlay">
-        <div class="log-line">> SYSTEM BOOT INITIATED...</div>
-        <div class="log-line">> Creating WebGL Projection Layer...</div>
-        <div class="log-line">> THREE.js Core: LOADED [Rev 128]</div>
-        <div class="log-line">> Neural Engine: INITIALIZED</div>
-        <div class="log-line">> BOOT SEQUENCE COMPLETE.</div>
+<div id="game-container">
+    <div id="vignette"></div>
+    <div id="overlay">
+        <h1 id="overlay-title">⚔ LEGEND OF ZELDA ⚔</h1>
+        <p id="overlay-text">WASD / ARROWS — Move &nbsp;|&nbsp; SPACE / Z — Sword<br>X — Bow &nbsp;|&nbsp; E — Interact / Open Chest<br><br>Find the 3 TRIFORCE PIECES to WIN<br>Explore the open world — forests, caves, temples!</p>
+        <button id="btn-start" class="btn-action" onclick="boot()">▶ START ADVENTURE</button>
     </div>
 
-    <div id="minimap"></div>
-
-    <div id="hud-bottom">
-        <div class="hud-btn">[ T ]</div>
-        <div class="hud-btn">FULL</div>
+    <div id="ui">
+        <div>
+            <div style="color:#666;font-size:9px;margin-bottom:3px;font-weight:bold;letter-spacing:1px">LIFE UNITS</div>
+            <div id="hearts"></div>
+        </div>
+        <div id="lbl">OVERWORLD</div>
+        <div id="stats">
+            RUPEES: <span id="rups" style="color:#fff">0</span><br>
+            SCORE: <span id="sc" style="color:#fff">0</span><br>
+            PIECES: <span id="pc" style="color:#fff">0</span>/3
+        </div>
+    </div>
+    <canvas id="c" width="576" height="480"></canvas>
+    <div id="hint">
+        <span>WASD: Move</span>
+        <span style="color:#ddd">SPACE/Z: Sword &nbsp; X: Bow &nbsp; E: Interact</span>
+        <span style="color:var(--zelda-gold)">Find 3 Triforce Pieces</span>
     </div>
 </div>
 
-<div id="game-canvas-container"></div>
+<div id="score-upload-url" data-url="{% url 'dungeonquest:submit_score' %}" style="display:none"></div>
+<input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
 {% endblock %}
 
 {% block extra_js %}
-<!-- Include Three.js from CDN since local is missing -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-    (function() {
-        // --- 3D ENGINE ---
-        let scene, camera, renderer, player, clock;
-        let biomes = ['forest', 'desert', 'tundra', 'swamp', 'burnt'];
-        let trees = [];
+const C=document.getElementById('c'),ctx=C.getContext('2d');
+const TW=32,COLS=18,ROWS=15,WW=COLS*TW,WH=ROWS*TW;
 
-        function init() {
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setClearColor(0x87ceeb); // Sky blue
-            document.getElementById('game-canvas-container').appendChild(renderer.domElement);
+// Sound System
+const AU=new (window.AudioContext||window.webkitAudioContext)();
+function sfx(f,type,vol,len){
+    let o=AU.createOscillator(),g=AU.createGain();
+    o.type=type; o.frequency.setValueAtTime(f,AU.currentTime);
+    g.gain.setValueAtTime(vol,AU.currentTime); g.gain.exponentialRampToValueAtTime(0.0001,AU.currentTime+len);
+    o.connect(g); g.connect(AU.destination); o.start(); o.stop(AU.currentTime+len);
+}
+const SOUNDS={
+    hit:()=>sfx(100,'sawtooth',0.2,0.2),
+    sword:()=>sfx(400,'sine',0.1,0.1),
+    coin:()=>sfx(880,'square',0.1,0.1),
+    death:()=>sfx(50,'sawtooth',0.3,0.5),
+    win:()=> { sfx(523,'sine',0.1,0.1); setTimeout(()=>sfx(659,'sine',0.1,0.1),100); setTimeout(()=>sfx(783,'sine',0.1,0.2),200); }
+};
 
-            clock = new THREE.Clock();
+// Tile IDs
+const GRASS=0,TREE=1,WATER=2,SAND=3,STONE=4,FLOOR=5,
+      WALL=6,DOOR=7,CHEST=8,TRIFORCE=9,LOCK=10,
+      PATH=11,FLOWER=12,DARK=13,LAVA=14,BRIDGE=15;
 
-            // Lighting
-            const ambient = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambient);
-            const sun = new THREE.DirectionalLight(0xffffff, 0.8);
-            sun.position.set(50, 100, 50);
-            scene.add(sun);
+// World Generation
+function mkScreen(fill){ return Array.from({length:ROWS},()=>Array(COLS).fill(fill)); }
+function setBorder(s,t){
+  for(let c=0;c<COLS;c++){s[0][c]=t;s[ROWS-1][c]=t;}
+  for(let r=0;r<ROWS;r++){s[r][0]=t;s[r][COLS-1]=t;}
+}
+function rect(s,r1,c1,r2,c2,t){ for(let r=r1;r<=r2;r++)for(let c=c1;c<=c2;c++)s[r][c]=t; }
 
-            // --- INFINITE BIOMES SYSTEM ---
-            const biomes = [
-                { name: 'Forest', color: 0x3a9d23, treeCount: 50 },
-                { name: 'Desert', color: 0xedc9af, treeCount: 20 },
-                { name: 'Tundra', color: 0xffffff, treeCount: 30 },
-                { name: 'Swamp', color: 0x223300, treeCount: 40 },
-                { name: 'Burnt', color: 0x333333, treeCount: 15 }
-            ];
+const SX=6,SY=4; 
+const WORLD=Array.from({length:SY},(_,wy)=>Array.from({length:SX},(_,wx)=>buildScreen(wx,wy)));
 
-            const tileSize = 200;
-            for(let i=0; i<biomes.length; i++) {
-                const b = biomes[i];
-                const groundGeo = new THREE.PlaneGeometry(tileSize, tileSize);
-                const groundMat = new THREE.MeshLambertMaterial({ color: b.color });
-                const ground = new THREE.Mesh(groundGeo, groundMat);
-                ground.rotation.x = -Math.PI / 2;
-                ground.position.set(i * tileSize - (biomes.length*tileSize)/2, 0, 0);
-                scene.add(ground);
+function buildScreen(wx,wy){
+  let s=mkScreen(GRASS);
+  setBorder(s,TREE);
+  s[0][8]=GRASS;s[0][9]=GRASS; s[ROWS-1][8]=GRASS;s[ROWS-1][9]=GRASS;
+  s[6][0]=GRASS;s[7][0]=GRASS; s[6][COLS-1]=GRASS;s[7][COLS-1]=GRASS;
+  let key=wy*SX+wx;
+  switch(key){
+    case 0: rect(s,3,3,7,7,WATER); s[4][4]=GRASS;s[5][5]=GRASS; placeRandom(s,TREE,8); s[8][14]=CHEST; break;
+    case 1: placeRandom(s,TREE,12); s[4][8]=FLOWER; s[10][4]=CHEST; break;
+    case 2: rect(s,2,2,13,16,SAND); setBorder(s,TREE); clearPassages(s,TREE,SAND); s[7][9]=CHEST; break;
+    case 3: rect(s,2,2,5,16,STONE); setBorder(s,TREE); clearPassages(s,TREE,GRASS); s[7][9]=TRIFORCE; break;
+    case 4: rect(s,1,1,ROWS-2,COLS-2,FLOOR); setBorder(s,WALL); clearPassages(s,WALL,FLOOR); s[7][8]=DOOR; s[3][8]=CHEST; break;
+    case 5: rect(s,1,1,ROWS-2,COLS-2,FLOOR); setBorder(s,WALL); clearPassages(s,WALL,FLOOR); s[7][9]=TRIFORCE; break;
+    case 6: s[7][9]=PATH;s[7][8]=PATH; placeRandom(s,FLOWER,8); s[5][14]=CHEST; break;
+    case 7: rect(s,5,8,9,10,WATER); s[5][8]=BRIDGE; s[7][5]=CHEST; break;
+    case 9: rect(s,1,1,ROWS-2,COLS-2,DARK); setBorder(s,WALL); clearPassages(s,WALL,DARK); s[7][9]=TRIFORCE; break;
+    case 10: rect(s,4,4,10,14,LAVA); s[6][4]=BRIDGE; s[7][9]=CHEST; break;
+    case 16: rect(s,1,1,ROWS-2,COLS-2,FLOOR); setBorder(s,WALL); clearPassages(s,WALL,FLOOR); s[7][9]=LOCK; s[5][9]=CHEST; break;
+    case 17: rect(s,1,1,ROWS-2,COLS-2,FLOOR); setBorder(s,WALL); clearPassages(s,WALL,FLOOR); s[7][9]=TRIFORCE; break;
+    default: placeRandom(s,TREE,5); break;
+  }
+  return s;
+}
 
-                // Add Biome-specific "Trees" (Pillars)
-                for(let j=0; j<b.treeCount; j++) {
-                    const h = 5 + Math.random() * 20;
-                    const pillar = new THREE.Mesh(new THREE.BoxGeometry(2, h, 2), new THREE.MeshLambertMaterial({ color: b.color }));
-                    pillar.position.set(
-                        ground.position.x + (Math.random()-0.5)*tileSize,
-                        h/2,
-                        ground.position.z + (Math.random()-0.5)*tileSize
-                    );
-                    scene.add(pillar);
-                }
+function placeRandom(s,t,n){
+  let tries=0; while(n>0&&tries<200){
+    tries++; let r=1+Math.floor(Math.random()*(ROWS-2)), c=1+Math.floor(Math.random()*(COLS-2));
+    if(s[r][c]===GRASS){s[r][c]=t;n--;}
+  }
+}
+function clearPassages(s,border,fill){
+  s[0][8]=fill;s[0][9]=fill; s[ROWS-1][8]=fill;s[ROWS-1][9]=fill;
+  s[6][0]=fill;s[7][0]=fill; s[6][COLS-1]=fill;s[7][COLS-1]=fill;
+}
+
+const ENEMY_DEFS={
+  0:[{t:'octorok',tx:5,ty:10},{t:'keese',tx:10,ty:12}],
+  1:[{t:'moblin',tx:12,ty:8},{t:'octorok',tx:3,ty:11}],
+  2:[{t:'moblin',tx:7,ty:7},{t:'moblin',tx:13,ty:10}],
+  4:[{t:'stalfos',tx:6,ty:7},{t:'keese',tx:4,ty:11}],
+  5:[{t:'wizzrobe',tx:6,ty:6},{t:'stalfos',tx:8,ty:12}],
+  9:[{t:'wizzrobe',tx:8,ty:5},{t:'stalfos',tx:5,ty:8}],
+  17:[{t:'wizzrobe',tx:7,ty:7},{t:'stalfos',tx:9,ty:12}],
+};
+
+function solid(t){return t===TREE||t===WATER||t===WALL||t===STONE||t===LOCK||t===LAVA;}
+function isTileSolid(wx,wy,tx,ty){
+  if(tx<0||tx>=COLS||ty<0||ty>=ROWS)return true;
+  return solid(WORLD[wy][wx][ty][tx]);
+}
+
+let G={};
+
+function boot(){
+  document.getElementById('overlay').style.display='none';
+  initGame();
+  requestAnimationFrame(loop);
+}
+
+function initGame(){
+  G={
+    wx:1,wy:2,
+    player:{ x:WW/2-14,y:WH/2-14, w:24,h:24, hp:6,maxHp:6, dir:1, attack:0, inv:0, frame:0, walkTimer:0, spd:3.2 },
+    enemies:[], projs:[], particles:[], floats:[], keys:{},
+    clouds: Array.from({length:5},()=>({x:Math.random()*WW,y:Math.random()*WH,s:0.2+Math.random()*0.5,w:100+Math.random()*150})),
+    rupees:0,score:0,pieces:0, hasKey:false, swordCD:0,bowCD:0,
+    openedChests:new Set(), deadEnemies:new Set(), frame:0,
+    trans:null, won:false,gameOver:false,
+  };
+  loadScreen();
+  updateHUD();
+}
+
+function spawnPart(x,y,c,vx,vy,life){
+  G.particles.push({x,y,c,vx,vy,life,max:life});
+}
+
+function screenKey(){return G.wy*SX+G.wx;}
+function loadScreen(){
+  G.enemies=[];G.projs=[];
+  let key=screenKey();
+  let defs=ENEMY_DEFS[key]||[];
+  defs.forEach((d,i)=>{
+    let eid=`${key}_${i}`;
+    if(!G.deadEnemies.has(eid)) G.enemies.push(makeEnemy(d.t,d.tx*TW,d.ty*TW,eid));
+  });
+}
+
+function makeEnemy(type,x,y,id){
+  const hp={octorok:3,moblin:4,stalfos:5,keese:2,wizzrobe:6}[type]||3;
+  const spd={octorok:1.1,moblin:0.9,stalfos:1.3,keese:1.7,wizzrobe:0.5}[type]||1;
+  return{type,id,x,y,w:24,h:24,hp,maxHp:hp,spd, dir:2,moveT:0,shootT:Math.floor(Math.random()*90), hitFlash:0,dead:false,vx:0,vy:0};
+}
+
+// Drawing Logic
+function drawTile(t,px,py,f){
+  switch(t){
+    case GRASS: 
+      ctx.fillStyle='#2d5a27';ctx.fillRect(px,py,TW,TW); 
+      ctx.fillStyle='#366b2f'; ctx.fillRect(px+4,py+4,2,4); ctx.fillRect(px+20,py+15,2,4); 
+      ctx.fillStyle='rgba(0,0,0,0.1)'; ctx.fillRect(px,py+28,TW,4); // shadow
+      break;
+    case TREE: 
+      ctx.fillStyle='#1e3f1e';ctx.fillRect(px,py,TW,TW); 
+      // Shadow
+      ctx.fillStyle='rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(px+16,py+28,12,6,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#2d5a27'; ctx.beginPath();ctx.moveTo(px+16,py+2);ctx.lineTo(px+4,py+26);ctx.lineTo(px+28,py+26);ctx.closePath();ctx.fill(); 
+      ctx.fillStyle='#366b2f'; ctx.beginPath();ctx.moveTo(px+16,py+6);ctx.lineTo(px+8,py+22);ctx.lineTo(px+24,py+22);ctx.closePath();ctx.fill();
+      break;
+    case WATER: 
+      ctx.fillStyle='#1a3366';ctx.fillRect(px,py,TW,TW); 
+      let rip = Math.sin(G.frame*0.1 + px*0.05 + py*0.05)*4;
+      ctx.fillStyle='#224488'; 
+      ctx.fillRect(px+4+rip,py+8,12,2); 
+      ctx.fillRect(px+12-rip,py+20,12,2);
+      break;
+    case SAND: 
+      ctx.fillStyle='#c2b280';ctx.fillRect(px,py,TW,TW); 
+      ctx.fillStyle='#d2c290'; for(let i=0;i<3;i++)ctx.fillRect(px+5+i*8,py+12+(i%2)*4,4,1);
+      break;
+    case STONE: 
+      ctx.fillStyle='#444';ctx.fillRect(px,py,TW,TW); 
+      ctx.fillStyle='#666';rectCorners(px+4,py+4,24,24,4);
+      break;
+    case FLOOR: ctx.fillStyle='#3a2a1a';ctx.fillRect(px,py,TW,TW); ctx.fillStyle='#4a3a2a';ctx.fillRect(px+2,py+2,28,28); break;
+    case WALL: ctx.fillStyle='#1a0d05';ctx.fillRect(px,py,TW,TW); ctx.fillStyle='#2b1d0e';ctx.fillRect(px+2,py+2,28,28); break;
+    case DOOR: 
+      ctx.fillStyle='#222';ctx.fillRect(px,py,TW,TW);
+      ctx.fillStyle='#f5c518';ctx.fillRect(px+6,py+6,20,20);
+      ctx.fillStyle='#aa8800';ctx.fillRect(px+12,py+14,8,8);
+      break;
+    case CHEST: 
+      ctx.fillStyle='#3a2a1a';ctx.fillRect(px,py,TW,TW);
+      ctx.fillStyle='#8b4513';ctx.fillRect(px+4,py+10,24,18); 
+      ctx.fillStyle='#f5c518';ctx.fillRect(px+14,py+14,4,4); 
+      if(G.openedChests.has(`${G.wy}_${G.wx}_${Math.floor(py/TW)}_${Math.floor(px/TW)}`)){
+          ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(px+4,py+10,24,4);
+      }
+      break;
+    case TRIFORCE: {
+        let osc=Math.sin(G.frame*0.1)*5;
+        ctx.fillStyle='#f5c518';ctx.beginPath();ctx.moveTo(px+16,py+5+osc);ctx.lineTo(px+6,py+26+osc);ctx.lineTo(px+26,py+26+osc);ctx.closePath();ctx.fill(); 
+        break;
+    }
+    case LOCK: ctx.fillStyle='#444';ctx.fillRect(px+10,py+12,12,14); break;
+    case DARK: ctx.fillStyle='#0a0a14';ctx.fillRect(px,py,TW,TW); break;
+    case LAVA: ctx.fillStyle='#aa3300';ctx.fillRect(px,py,TW,TW); break;
+    case BRIDGE: ctx.fillStyle='#5c4033';ctx.fillRect(px,py,TW,TW); break;
+    default: ctx.fillStyle='#2d5a27';ctx.fillRect(px,py,TW,TW); break;
+  }
+}
+
+function drawLink(p){
+  let x=Math.round(p.x),y=Math.round(p.y);
+  let bob = Math.sin(p.walkTimer*0.2)*3;
+  let wf = Math.floor(p.walkTimer/8)%2;
+  
+  // Shadow
+  ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(x+12,y+24,10,5,0,0,Math.PI*2); ctx.fill();
+
+  // Legs
+  ctx.fillStyle='#4a3721';
+  if(wf===0){ ctx.fillRect(x+6,y+18+bob,4,6); ctx.fillRect(x+14,y+18+bob,4,6); }
+  else { ctx.fillRect(x+8,y+16+bob,4,8); ctx.fillRect(x+12,y+16+bob,4,8); }
+
+  ctx.fillStyle='#228833'; ctx.fillRect(x+4,y+8+bob,16,12); // Tunic
+  ctx.fillStyle='#f0c090'; ctx.fillRect(x+6,y+2+bob,12,10); // Head
+  ctx.fillStyle='#000'; if(p.dir===1){ctx.fillRect(x+8,y+7+bob,2,2);ctx.fillRect(x+14,y+7+bob,2,2);} // Eyes
+  if(p.attack>0){
+    ctx.strokeStyle='#fff'; ctx.lineWidth=3;
+    ctx.beginPath();
+    if(p.dir===0) { ctx.moveTo(x+4,y+8); ctx.lineTo(x+28,y+8); ctx.arc(x+16,y+8,20,Math.PI,2*Math.PI); }
+    else if(p.dir===1) { ctx.moveTo(x+4,y+24); ctx.lineTo(x+28,y+24); ctx.arc(x+16,y+24,20,0,Math.PI); }
+    else if(p.dir===2) { ctx.moveTo(x+8,y+4); ctx.lineTo(x+8,y+28); ctx.arc(x+8,y+16,20,0.5*Math.PI,1.5*Math.PI); }
+    else { ctx.moveTo(x+24,y+4); ctx.lineTo(x+24,y+28); ctx.arc(x+24,y+16,20,1.5*Math.PI,0.5*Math.PI); }
+    ctx.stroke();
+    
+    ctx.fillStyle='#f5c518';
+    if(p.dir===0) ctx.fillRect(x+14,y-18,4,20);
+    else if(p.dir===1) ctx.fillRect(x+14,y+24,4,20);
+    else if(p.dir===2) ctx.fillRect(x-18,y+14,20,4);
+    else ctx.fillRect(x+24,y+14,20,4);
+  }
+}
+
+function drawEnemy(e){
+  let x=Math.round(e.x),y=Math.round(e.y);
+  let flash=e.hitFlash>0;
+  ctx.fillStyle=flash?'#fff':(e.type==='octorok'?'#cc2200':'#224488');
+  ctx.fillRect(x+4,y+4,24,24);
+}
+
+// Collisions & Movement
+let SHAKE=0;
+function canMove(x,y,w,h){
+  let p=2; // small padding
+  let points=[
+    [x+p,y+p],[x+w/2,y+p],[x+w-p,y+p],
+    [x+p,y+h/2],[x+w-p,y+h/2],
+    [x+p,y+h-p],[x+w/2,y+h-p],[x+w-p,y+h-p]
+  ];
+  return !points.some(([cx,cy])=>isTileSolid(G.wx,G.wy,Math.floor(cx/TW),Math.floor(cy/TW)));
+}
+function tryMove(obj,dx,dy){
+  if(dx!==0 && canMove(obj.x+dx,obj.y,obj.w,obj.h)) obj.x+=dx;
+  else if(dx!==0) SHAKE=Math.min(SHAKE+2, 5);
+  if(dy!==0 && canMove(obj.x,obj.y+dy,obj.w,obj.h)) obj.y+=dy;
+  else if(dy!==0) SHAKE=Math.min(SHAKE+2, 5);
+}
+
+// Game Logic
+function updatePlayer(){
+  if(G.trans||G.won||G.gameOver)return;
+  let p=G.player; if(p.inv>0)p.inv--; if(p.attack>0)p.attack--; if(G.swordCD>0)G.swordCD--;
+  let dx=0,dy=0,moving=false;
+  if(G.keys['w']||G.keys['ArrowUp']){dy=-p.spd;p.dir=0;moving=true;}
+  if(G.keys['s']||G.keys['ArrowDown']){dy=p.spd;p.dir=1;moving=true;}
+  if(G.keys['a']||G.keys['ArrowLeft']){dx=-p.spd;p.dir=2;moving=true;}
+  if(G.keys['d']||G.keys['ArrowRight']){dx=p.spd;p.dir=3;moving=true;}
+  if(moving){
+      tryMove(p,dx,0);tryMove(p,0,dy);p.walkTimer++;
+      if(G.frame%5===0) spawnPart(p.x+12,p.y+24,'rgba(100,80,50,0.3)',(Math.random()-0.5),-0.5,20);
+  }
+  if((G.keys[' ']||G.keys['z'])&&G.swordCD===0){p.attack=12;G.swordCD=20;doSword();}
+  if(G.keys['e']&&!G.interacted){G.interacted=true;interact();}
+  if(!G.keys['e'])G.interacted=false;
+  
+  // Collision with enemies
+  G.enemies.forEach(e => {
+    if(!e.dead && dist(p.x+12, p.y+12, e.x+12, e.y+12) < 20) {
+        if(p.inv === 0) { 
+            p.hp--; p.inv = 60; updateHUD(); 
+            addFloat(p.x,p.y,'-1 HP!','#ff0000');
+            SHAKE = 15; SOUNDS.hit();
+            for(let i=0;i<8;i++) spawnPart(p.x+12,p.y+12,'#ff0000',(Math.random()-0.5)*5,(Math.random()-0.5)*5,20);
+            if(p.hp <= 0) {
+                G.gameOver = true; SOUNDS.death();
+                showDeath();
             }
-
-            // Player (The Floating Cube/Character)
-            const playerGeo = new THREE.BoxGeometry(2, 2, 2);
-            const playerMat = new THREE.MeshLambertMaterial({ color: 0xff0000 });
-            player = new THREE.Mesh(playerGeo, playerMat);
-            player.position.set(0, 5, 0);
-            scene.add(player);
-
-            camera.position.set(0, 15, 30);
-            camera.lookAt(player.position);
-
-            animate();
-            
-            // Show UI sequence
-            setTimeout(() => {
-                document.getElementById('loading-screen').style.display = 'none';
-                document.getElementById('terminal-overlay').style.opacity = '1';
-            }, 2000);
         }
+    }
+  });
 
-        function animate() {
-            requestAnimationFrame(animate);
-            const delta = clock.getElapsedTime();
-            
-            // Camera follow
-            camera.position.x = player.position.x;
-            camera.position.z = player.position.z + 30;
-            camera.lookAt(player.position);
+  checkScreenEdge();
+}
 
-            renderer.render(scene, camera);
+function updateEnemies(){
+    G.enemies.forEach(e => {
+        if(e.dead) return;
+        if(e.hitFlash > 0) e.hitFlash--;
+        
+        // Simple AI: Move towards player
+        let p = G.player;
+        let d = dist(e.x, e.y, p.x, p.y);
+        if(d < 200) {
+            let dx = (p.x - e.x) / d * e.spd;
+            let dy = (p.y - e.y) / d * e.spd;
+            tryMove(e, dx, dy);
         }
+    });
+}
 
-        window.addEventListener('keydown', (e) => {
-            const speed = 1.5;
-            if (e.key === 'w') player.position.z -= speed;
-            if (e.key === 's') player.position.z += speed;
-            if (e.key === 'a') player.position.x -= speed;
-            if (e.key === 'd') player.position.x += speed;
-            if (e.key === ' ' || e.key === 'j') player.position.y = 10; // Simple jump
-        });
+function checkScreenEdge(){
+  let p=G.player;
+  if(p.x+p.w>=WW-2 && G.wx<SX-1){startTrans('E');}
+  else if(p.x<=2 && G.wx>0){startTrans('W');}
+  else if(p.y+p.h>=WH-2 && G.wy<SY-1){startTrans('S');}
+  else if(p.y<=2 && G.wy>0){startTrans('N');}
+}
 
-        window.addEventListener('keyup', (e) => {
-            if (e.key === ' ' || e.key === 'j') player.position.y = 5;
-        });
+function startTrans(dir){ G.trans={dir,alpha:0,done:false}; }
+function finishTrans(){
+  let d=G.trans.dir,p=G.player;
+  if(d==='E'){G.wx++;p.x=8;} else if(d==='W'){G.wx--;p.x=WW-p.w-8;}
+  else if(d==='S'){G.wy++;p.y=8;} else{G.wy--;p.y=WH-p.h-8;}
+  loadScreen(); G.trans=null; updateHUD();
+}
 
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
+function interact(){
+  let p=G.player;
+  let tx=Math.floor((p.x+16)/TW),ty=Math.floor((p.y+16)/TW);
+  let tile=WORLD[G.wy][G.wx][ty][tx];
+  if(tile===CHEST){
+    let key=`${G.wy}_${G.wx}_${ty}_${tx}`;
+    if(!G.openedChests.has(key)){
+        G.openedChests.add(key); G.rupees+=20; G.score+=200; updateHUD();
+        addFloat(p.x,p.y,'+20 RUPEES!','#f5c518'); SOUNDS.coin();
+    }
+  }
+  if(tile===TRIFORCE){
+    G.pieces++;G.score+=1000; WORLD[G.wy][G.wx][ty][tx]=FLOOR; updateHUD(); SOUNDS.win();
+    if(G.pieces>=3){ G.won=true; showWin(); }
+  }
+}
 
-        init();
-    })();
+function doSword(){
+  let p=G.player; SOUNDS.sword();
+  G.enemies.forEach(e=>{
+    if(!e.dead && dist(p.x+16,p.y+16,e.x+12,e.y+12)<45){ damageEnemy(e,2); }
+  });
+}
+
+function damageEnemy(e,dmg){
+  e.hp-=dmg; e.hitFlash=8; SOUNDS.hit();
+  for(let i=0;i<5;i++) spawnPart(e.x+12,e.y+12,'#ffff00',(Math.random()-0.5)*4,(Math.random()-0.5)*4,15);
+  if(e.hp<=0){
+      e.dead=true; G.deadEnemies.add(e.id); G.score+=100; updateHUD();
+      for(let i=0;i<10;i++) spawnPart(e.x+12,e.y+12,'#fff',(Math.random()-0.5)*6,(Math.random()-0.5)*6,25);
+  }
+}
+
+function showWin(){
+    document.getElementById('overlay-title').innerText = "🏆 ADVENTURE COMPLETE! 🏆";
+    document.getElementById('overlay-text').innerText = "You have collected all 3 pieces of the Triforce and saved the kingdom!";
+    document.getElementById('btn-start').innerText = "SUBMIT SCORE";
+    document.getElementById('btn-start').onclick = submitScore;
+    document.getElementById('overlay').style.display = 'flex';
+}
+
+function showDeath(){
+    document.getElementById('overlay-title').innerText = "💀 THE HERO HAS FALLEN 💀";
+    document.getElementById('overlay-text').innerText = "Your quest has come to a tragic end. The kingdom awaits a new savior.";
+    document.getElementById('btn-start').innerText = "RETRY QUEST";
+    document.getElementById('btn-start').onclick = ()=>{ document.getElementById('overlay').style.display='none'; initGame(); };
+    document.getElementById('overlay').style.display = 'flex';
+}
+
+function submitScore(){
+    const url = document.getElementById('score-upload-url').dataset.url;
+    const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrf
+        },
+        body: JSON.stringify({ score: G.score })
+    }).then(() => {
+        window.location.href = "{% url 'leaderboard:global' %}";
+    });
+}
+
+function updateHUD(){
+  document.getElementById('rups').textContent=G.rupees;
+  document.getElementById('sc').textContent=G.score;
+  document.getElementById('pc').textContent=G.pieces;
+  let hc=document.getElementById('hearts'); hc.innerHTML='';
+  for(let i=0;i<G.player.maxHp;i++) hc.innerHTML+='<span class="h">'+(i<G.player.hp?'❤':'🖤')+'</span>';
+}
+
+function dist(x1,y1,x2,y2){return Math.sqrt((x2-x1)**2+(y2-y1)**2);}
+function addFloat(x,y,text,color){G.floats.push({x,y,text,color,life:50,maxLife:50});}
+function rectCorners(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+    ctx.fill();
+}
+
+function drawClouds(){
+    ctx.fillStyle='rgba(255,255,255,0.05)';
+    G.clouds.forEach(c=>{
+        ctx.beginPath();ctx.arc(c.x,c.y,c.w/2,0,Math.PI*2);ctx.fill();
+        c.x += c.s; if(c.x > WW+100) c.x = -200;
+    });
+}
+
+function drawLighting(){
+    let p=G.player;
+    ctx.save();
+    let grad = ctx.createRadialGradient(p.x+12, p.y+12, 50, p.x+12, p.y+12, 180);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.85)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,WW,WH);
+    ctx.restore();
+}
+
+function loop(){
+  G.frame++; ctx.save();
+  if(SHAKE>0){ ctx.translate((Math.random()-0.5)*SHAKE, (Math.random()-0.5)*SHAKE); SHAKE*=0.9; if(SHAKE<0.5)SHAKE=0; }
+  ctx.clearRect(-10,-10,WW+20,WH+20);
+  let scr=WORLD[G.wy][G.wx];
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+      let t=scr[r][c];
+      drawTile(t,c*TW,r*TW,Math.floor(G.frame/8));
+      if(t===TREE && G.frame%40===0 && Math.random()<0.3) spawnPart(c*TW+16,r*TW+16,'#32cd32',(Math.random()-0.1)*0.5,0.5+Math.random(),40);
+  }
+  
+  // Particles
+  G.particles.forEach((p,i)=>{
+      ctx.fillStyle=p.c; ctx.globalAlpha=p.life/p.max;
+      ctx.fillRect(p.x,p.y,2,2);
+      p.x+=p.vx; p.y+=p.vy; p.life--;
+  });
+  G.particles=G.particles.filter(p=>p.life>0);
+  ctx.globalAlpha=1;
+
+  G.enemies.forEach(e=>{ if(!e.dead) drawEnemy(e); });
+  if(!(G.player.inv>0&&Math.floor(G.frame/6)%2===0))drawLink(G.player);
+  
+  drawClouds();
+  let tile=scr[Math.floor((G.player.y+16)/TW)][Math.floor((G.player.x+16)/TW)];
+  if(tile===DARK || tile===LAVA) drawLighting();
+
+  G.floats.forEach(f=>{ctx.fillStyle=f.color;ctx.fillText(f.text,f.x,f.y-=0.5);f.life--;});
+  G.floats=G.floats.filter(f=>f.life>0);
+  ctx.restore();
+  if(G.trans){ctx.fillStyle='rgba(0,0,0,'+Math.min(G.trans.alpha,1)+')';ctx.fillRect(0,0,WW,WH);G.trans.alpha+=0.05;if(G.trans.alpha>=1.2)finishTrans();}
+  updatePlayer();
+  updateEnemies();
+  requestAnimationFrame(loop);
+}
+
+document.addEventListener('keydown',e=>{G.keys[e.key.toLowerCase()]=true;});
+document.addEventListener('keyup',e=>{G.keys[e.key.toLowerCase()]=false;});
+const cursor=document.getElementById('cursor');
+document.addEventListener('mousemove',e=>{cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px';});
 </script>
 {% endblock %}

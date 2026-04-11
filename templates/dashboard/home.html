@@ -233,7 +233,9 @@
         <div class="game-card stagger-item">
             <div class="card-inner">
                 <div class="card-banner">ID: {{ game.id|add:"100" }}</div>
-                {% if game.image %}
+                {% if game.slug == 'unfearbugrobot' %}
+                <img src="{% static 'img/bug_bg.png' %}" alt="{{ game.name }}" style="object-fit: cover;">
+                {% elif game.image %}
                 <img src="{{ game.image.url }}" alt="{{ game.name }}">
                 {% else %}
                 <img src="https://placehold.co/400x200/151821/00f2ff?text={{ game.name|urlencode }}"
