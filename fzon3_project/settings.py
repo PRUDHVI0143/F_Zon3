@@ -31,6 +31,8 @@ DEBUG = 'RENDER' not in os.environ
 # Allow all hosts so it works instantly when deployed to any server domain
 ALLOWED_HOSTS = ['*']
 
+CSRF_TRUSTED_ORIGINS = ['https://prudhviraj08.pythonanywhere.com']
+
 
 # Application definition
 
@@ -154,7 +156,8 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Use whitenoise to host the static files smoothly on live servers without an NGINX setup
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Using CompressedStaticFilesStorage instead of Manifest to prevent 500 errors if a static file is missing.
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
