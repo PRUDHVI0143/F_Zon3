@@ -25,8 +25,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-m)jtlyjk!41buafrcx8+r_3b@=3tm(l#m@+zrv#fhjy)xz!*-=')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# Automatically turn off DEBUG if deploying on a platform like Render
-DEBUG = 'RENDER' not in os.environ
+# Automatically turn off DEBUG if deploying on a platform like Render or PythonAnywhere
+DEBUG = 'RENDER' not in os.environ and 'PYTHONANYWHERE_DOMAIN' not in os.environ
 
 # Allow all hosts so it works instantly when deployed to any server domain
 ALLOWED_HOSTS = ['*']
