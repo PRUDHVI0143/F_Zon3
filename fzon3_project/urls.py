@@ -24,7 +24,6 @@ urlpatterns = [
     path('whackamole/', include('whackamole.urls')),
     path('aimtrainer/', include('aimtrainer.urls')),
     path('typingtest/', include('typingtest.urls')),
-    path('colorswitch/', include('colorswitch.urls')),
     path('checkers/', include('checkers.urls')),
     path('connect4/', include('connect4.urls')),
     path('flappybird/', include('flappybird.urls')),

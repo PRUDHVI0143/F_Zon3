@@ -66,7 +66,6 @@ INSTALLED_APPS = [
     'whackamole',
     'aimtrainer',
     'typingtest',
-    'colorswitch',
     'checkers',
     'connect4',
     'flappybird',
