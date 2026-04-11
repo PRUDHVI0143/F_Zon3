@@ -26,7 +26,7 @@ class ProfileView(LoginRequiredMixin, DetailView):
 
 class ProfileUpdateView(LoginRequiredMixin, UpdateView):
     model = UserProfile
-    fields = ['nickname', 'bio', 'avatar']
+    fields = ['nickname', 'bio']
     template_name = 'accounts/profile_update.html'
     success_url = reverse_lazy('accounts:profile')
 
