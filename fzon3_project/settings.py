@@ -117,7 +117,7 @@ WSGI_APPLICATION = 'fzon3_project.wsgi.application'
 # Vercel filesystems are read-only except for /tmp. We copy the baked-in sqlite DB there to prevent 500 errors during POST requests.
 if 'VERCEL' in os.environ:
     db_path = BASE_DIR / 'db.sqlite3'
-    tmp_path = '/tmp/db.sqlite3'
+    tmp_path = '/tmp/db_v2.sqlite3'
     if not os.path.exists(tmp_path) and os.path.exists(db_path):
         shutil.copy2(db_path, tmp_path)
     current_db = tmp_path
