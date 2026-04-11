@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 
 import os
+import shutil
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -108,11 +109,22 @@ WSGI_APPLICATION = 'fzon3_project.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+# Vercel Serverless SQLite Hack
+# Vercel filesystems are read-only except for /tmp. We copy the baked-in sqlite DB there to prevent 500 errors during POST requests.
+if 'VERCEL' in os.environ:
+    db_path = BASE_DIR / 'db.sqlite3'
+    tmp_path = '/tmp/db.sqlite3'
+    if not os.path.exists(tmp_path) and os.path.exists(db_path):
+        shutil.copy2(db_path, tmp_path)
+    current_db = tmp_path
+else:
+    current_db = BASE_DIR / 'db.sqlite3'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-        'CONN_MAX_AGE': 600, # ADDED: Reuse database connections
+        'NAME': current_db,
+        'CONN_MAX_AGE': 600,
     }
 }
 
